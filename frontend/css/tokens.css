@@ -1,57 +1,57 @@
 :root {
-    /* Backgrounds — Sentry Dark Theme Palette with Subtle Elevation */
-    --bg-app: #0E0B12;
-    --bg-app-radial: radial-gradient(ellipse at top, #1A1526 0%, #0E0B12 100%);
-    --bg-primary: #16121E;
-    --bg-secondary: #1E1929;
-    --bg-tertiary: #272134;
-    --bg-overlay: #322A42;
-    --bg-hover: #2D263B;
+    /* Backgrounds — Sentry Flat Dark Palette (No Gradients) */
+    --bg-app: #16131D;
+    --bg-app-radial: #16131D;
+    --bg-primary: #1F1B29;
+    --bg-secondary: #272233;
+    --bg-tertiary: #302B3D;
+    --bg-overlay: #3B354A;
+    --bg-hover: #2D273B;
     
     /* Content Colors */
     --text-heading: #FFFFFF;
-    --text-primary: #EAE6F2;
-    --text-secondary: #B1A9C2;
-    --text-disabled: #776E87;
-    --text-inverse: #0E0B12;
+    --text-primary: #E6E1F0;
+    --text-secondary: #A39BB0;
+    --text-disabled: #6D657A;
+    --text-inverse: #16131D;
     
     /* Borders */
-    --border-primary: rgba(255, 255, 255, 0.08);
-    --border-muted: rgba(255, 255, 255, 0.14);
-    --border-moderate: rgba(255, 255, 255, 0.22);
+    --border-primary: #2D2838;
+    --border-muted: #3D374A;
+    --border-moderate: #4E475E;
     
-    /* Brand Accent — Sentry Purple */
-    --accent: #7553FF;
-    --accent-hover: #8B6FFF;
-    --accent-content: #B4A0FF;
-    --accent-muted: rgba(117, 83, 255, 0.30);
-    --accent-surface: rgba(117, 83, 255, 0.15);
+    /* Brand Accent — Sentry Purple (Flat) */
+    --accent: #6C5FC7;
+    --accent-hover: #7E71DD;
+    --accent-content: #9F93F0;
+    --accent-muted: rgba(108, 95, 199, 0.30);
+    --accent-surface: rgba(108, 95, 199, 0.15);
     
-    /* Status Colors */
-    --critical: #FF3B30;
-    --critical-content: #FF6B63;
-    --critical-surface: rgba(255, 59, 48, 0.15);
+    /* Status Colors (Flat Sentry Badges) */
+    --critical: #E03E2F;
+    --critical-content: #F26C60;
+    --critical-surface: rgba(224, 62, 47, 0.15);
     
-    --warning: #FFCC00;
-    --warning-content: #FFE066;
-    --warning-surface: rgba(255, 204, 0, 0.15);
+    --warning: #F5A623;
+    --warning-content: #FFC056;
+    --warning-surface: rgba(245, 166, 35, 0.15);
     
-    --success: #34C759;
-    --success-content: #66E085;
-    --success-surface: rgba(52, 199, 89, 0.15);
+    --success: #2DA44E;
+    --success-content: #56C075;
+    --success-surface: rgba(45, 164, 78, 0.15);
     
-    --info: #00A7FF;
-    --info-content: #6CB8FF;
-    --info-surface: rgba(0, 167, 255, 0.15);
+    --info: #0969DA;
+    --info-content: #54A3FF;
+    --info-surface: rgba(9, 105, 218, 0.15);
     
     /* Event Colors for Blame Trail */
-    --event-deployment: #00A7FF;
-    --event-configmap: #FF9500;
-    --event-scale: #34C759;
-    --event-statefulset: #AF52DE;
-    --event-baseline: #7553FF;
-    --event-spike: #FF3B30;
-    --event-unknown: #8E8E93;
+    --event-deployment: #0969DA;
+    --event-configmap: #D97706;
+    --event-scale: #2DA44E;
+    --event-statefulset: #8B5CF6;
+    --event-baseline: #6C5FC7;
+    --event-spike: #E03E2F;
+    --event-unknown: #6D657A;
     
     /* Typography — Google Fonts Inter & JetBrains Mono */
     --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -80,16 +80,16 @@
     --radius-lg: 8px;
     --radius-xl: 12px;
     
-    /* Shadows */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
+    /* Flat Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
     
     /* Motion */
-    --duration-fast: 120ms;
-    --duration-moderate: 160ms;
-    --duration-slow: 240ms;
-    --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-fast: 100ms;
+    --duration-moderate: 150ms;
+    --duration-slow: 200ms;
+    --ease-smooth: ease-out;
     
     /* Layout */
     --sidebar-width: 230px;
@@ -112,8 +112,7 @@ body {
     font-family: var(--font-body);
     font-size: var(--text-md);
     color: var(--text-primary);
-    background: var(--bg-app-radial);
-    background-attachment: fixed;
+    background: var(--bg-app);
     line-height: 1.5;
     overflow-x: hidden;
 }

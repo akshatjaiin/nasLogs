@@ -23,7 +23,7 @@ export async function renderIncidentDetail(container, params) {
                 <div class="detail-header">
                     <div class="title-section">
                         <h1 class="incident-title-large">
-                            ${incident.severity === 'critical' ? '🚨' : '⚠️'} ${incident.title} (+${Math.round(anomaly.deviation_pct || 0)}%)
+                            ${incident.title} (+${Math.round(anomaly.deviation_pct || 0)}%)
                         </h1>
                         <div class="title-badges">
                             <span class="severity-badge ${incident.status}">${incident.status}</span>
@@ -46,8 +46,8 @@ export async function renderIncidentDetail(container, params) {
                 <!-- BLAME TRAIL -->
                 <div class="blame-trail">
                     <div class="blame-trail-header">
-                        <h3>🔍 Blame Trail — What Happened</h3>
-                        <span style="font-size:var(--text-sm);color:var(--text-secondary)">±30 min window around spike</span>
+                        <h3>Blame Trail — Root Cause Correlation</h3>
+                        <span style="font-size:var(--text-sm);color:var(--text-secondary)">±30 min temporal window</span>
                     </div>
                     <div class="trail-timeline">
                         <div class="trail-ruler">
@@ -108,7 +108,7 @@ export async function renderIncidentDetail(container, params) {
 
                         ${correlations.length === 0 ? `
                             <div style="padding:var(--space-xl);text-align:center;color:var(--text-secondary)">
-                                No K8s events found near the spike — unknown root cause
+                                No K8s audit events found near the spike — root cause unassigned
                             </div>
                         ` : ''}
                     </div>
@@ -118,7 +118,7 @@ export async function renderIncidentDetail(container, params) {
                 <div class="evidence-grid">
                     <div class="evidence-card">
                         <div class="card-header">
-                            <h4>💰 Anomaly</h4>
+                            <h4>Anomaly Metrics</h4>
                             <span class="severity-badge ${incident.severity}">${incident.severity}</span>
                         </div>
                         <div class="stat-row">
@@ -134,14 +134,14 @@ export async function renderIncidentDetail(container, params) {
                             <span class="stat-value spike">+${Math.round(anomaly.deviation_pct || 0)}%</span>
                         </div>
                         <div class="stat-row">
-                            <span class="stat-label">Detection</span>
+                            <span class="stat-label">Detection Algorithm</span>
                             <span class="stat-value" style="font-size:var(--text-sm)">${anomaly.method || 'pct_change'}</span>
                         </div>
                     </div>
 
                     <div class="evidence-card">
                         <div class="card-header">
-                            <h4>🎯 Likely Cause</h4>
+                            <h4>Likely Root Cause</h4>
                             ${topCorr ? `<span class="confidence-badge">${Math.round((topCorr.confidence || 0) * 100)}% match</span>` : ''}
                         </div>
                         ${topCorr ? `
@@ -161,13 +161,12 @@ export async function renderIncidentDetail(container, params) {
                             <div class="confidence-bar" style="margin-top:var(--space-md)">
                                 <div class="fill" style="width:${(topCorr.confidence || 0) * 100}%"></div>
                             </div>
-                        ` : '<p style="color:var(--text-secondary);margin-top:var(--space-lg)">No correlated events found — root cause unknown</p>'}
+                        ` : '<p style="color:var(--text-secondary);margin-top:var(--space-lg)">No correlated events found</p>'}
                     </div>
 
                     <div class="evidence-card">
                         <div class="card-header">
-                            <h4>📊 Cost History</h4>
-                            <span style="font-size:var(--text-xs);color:var(--text-disabled)">24h</span>
+                            <h4>Cost History (24h)</h4>
                         </div>
                         <div class="chart-container" style="height:140px;position:relative;margin-top:12px">
                             <canvas id="detail-sparkline"></canvas>
@@ -177,11 +176,11 @@ export async function renderIncidentDetail(container, params) {
 
                 ${correlations.length > 0 ? `
                 <div class="section">
-                    <h3 class="section-title">🔗 All Correlated Events</h3>
+                    <h3 class="section-title">All Correlated Audit Events</h3>
                     <div class="panel">
                         <table class="correlations-table">
                             <thead>
-                                tr>
+                                <tr>
                                     <th>#</th>
                                     <th>Event</th>
                                     <th>Resource</th>
@@ -245,30 +244,31 @@ export async function renderIncidentDetail(container, params) {
                             labels: historyData.map((_, i) => `${historyData.length - i}h ago`),
                             datasets: [{
                                 data: historyData,
-                                borderColor: incident.severity === 'critical' ? '#FF002B' : '#FFCE00',
-                                backgroundColor: incident.severity === 'critical' ? 'rgba(255,0,43,0.15)' : 'rgba(255,206,0,0.15)',
-                                fill: true, tension: 0.3, borderWidth: 2, pointRadius: 0,
+                                borderColor: incident.severity === 'critical' ? '#E03E2F' : '#F5A623',
+                                backgroundColor: incident.severity === 'critical' ? 'rgba(224, 62, 47, 0.12)' : 'rgba(245, 166, 35, 0.12)',
+                                fill: true, tension: 0.3, borderWidth: 1.5, pointRadius: 0,
                                 pointHoverRadius: 4, pointHoverBackgroundColor: '#fff'
                             }]
                         },
                         options: {
                             responsive: true, maintainAspectRatio: false,
                             plugins: { legend: { display: false }, tooltip: {
-                                backgroundColor: '#393442', titleColor: '#E7E5EA', bodyColor: '#B5B0BD',
-                                borderColor: '#534D5E', borderWidth: 1, padding: 10, cornerRadius: 6,
+                                backgroundColor: '#272233', titleColor: '#FFFFFF', bodyColor: '#A39BB0',
+                                borderColor: '#3D374A', borderWidth: 1, padding: 10, cornerRadius: 4,
                                 callbacks: { label: (ctx) => `$${ctx.parsed.y.toFixed(2)}/hr` }
                             }},
                             scales: {
                                 x: { display: false },
-                                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#776E87', font: { size: 10 }, callback: v => '$' + v } }
+                                y: { grid: { color: '#2D2838' }, ticks: { color: '#6D657A', font: { size: 10 }, callback: v => '$' + v } }
                             }
                         }
                     });
                 }
             }
+            if (window.lucide) window.lucide.createIcons();
         }, 100);
     } catch (err) {
-        container.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">❌</div><h3>Failed to load incident</h3><p>${err.message}</p></div></div>`;
+        container.innerHTML = `<div class="page"><div class="empty-state"><h3>Failed to load incident</h3><p>${err.message}</p></div></div>`;
     }
 }
 

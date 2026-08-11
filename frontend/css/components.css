@@ -1,3 +1,13 @@
+.pulse-dot {
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0% { opacity: 1; filter: drop-shadow(0 0 4px #00F261); }
+    50% { opacity: 0.3; filter: none; }
+    100% { opacity: 1; filter: drop-shadow(0 0 4px #00F261); }
+}
+
 /* ========== PROJECT SELECTOR DROPDOWN (SENTRY STYLE) ========== */
 .project-selector-container {
     padding: var(--space-sm) var(--space-md);

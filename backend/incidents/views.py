@@ -12,24 +12,35 @@ from collector.models import CostSnapshot, WorkloadCost
 
 class IncidentViewSet(viewsets.ModelViewSet):
     serializer_class = IncidentSerializer
-    
+    authentication_classes = []
+    permission_classes = []
+
     def get_queryset(self):
         qs = Incident.objects.all()
         status = self.request.query_params.get('status')
         severity = self.request.query_params.get('severity')
         search = self.request.query_params.get('search')
-        
+        start_time = self.request.query_params.get('start_time')
+        end_time = self.request.query_params.get('end_time')
+
         if status:
             qs = qs.filter(status=status)
         if severity:
             qs = qs.filter(severity=severity)
         if search:
             qs = qs.filter(title__icontains=search)
-            
+        if start_time:
+            qs = qs.filter(created_at__gte=start_time)
+        if end_time:
+            qs = qs.filter(created_at__lte=end_time)
+
         return qs
 
 
 class DashboardSummaryView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
     def get(self, request):
         open_count = Incident.objects.filter(status=Incident.Status.OPEN).count()
         critical_count = Incident.objects.filter(
@@ -58,15 +69,15 @@ class DashboardSummaryView(APIView):
             hour_start = now - timedelta(hours=24-i)
             hour_end = hour_start + timedelta(hours=1)
             snapshot = CostSnapshot.objects.filter(
-                timestamp__gte=hour_start, timestamp__lt=hour_end
+                timestamp__gte=hour_start,
+                timestamp__lt=hour_end
             ).first()
+            
             if snapshot:
-                hour_total = float(
-                    snapshot.workload_costs.aggregate(
-                        total=Coalesce(Sum('network_cost_total'), 0, output_field=DecimalField())
-                    )['total']
-                )
-                cost_history.append(round(hour_total, 2))
+                val = snapshot.workload_costs.aggregate(
+                    total=Coalesce(Sum('network_cost_total'), 0, output_field=DecimalField())
+                )['total']
+                cost_history.append(float(val))
             else:
                 cost_history.append(0)
         
@@ -81,9 +92,10 @@ class DashboardSummaryView(APIView):
 
 class CostBreakdownView(APIView):
     """Namespace-level cost breakdown with drill-down to controllers."""
-    
+    authentication_classes = []
+    permission_classes = []
+
     def get(self, request):
-        # Get the latest snapshot per unique timestamp
         now = timezone.now()
         latest_snapshot = CostSnapshot.objects.order_by('-timestamp').first()
         
@@ -160,8 +172,10 @@ class CostBreakdownView(APIView):
 
 
 class CostHistoryView(APIView):
-    """Return cost history for a specific workload."""
-    
+    """Return detailed cost history & egress telemetry for a specific workload."""
+    authentication_classes = []
+    permission_classes = []
+
     def get(self, request):
         namespace = request.query_params.get('namespace')
         controller = request.query_params.get('controller')
@@ -172,20 +186,45 @@ class CostHistoryView(APIView):
         
         now = timezone.now()
         data_points = []
-        for i in range(hours):
+        total_cost_sum = 0
+        total_bytes_sum = 0
+
+        # Step size adjustment for long ranges (7d / 30d)
+        step = 1 if hours <= 24 else (7 if hours <= 168 else 30)
+
+        for i in range(0, hours, step):
             hour_start = now - timedelta(hours=hours - i)
-            hour_end = hour_start + timedelta(hours=1)
+            hour_end = hour_start + timedelta(hours=step)
             
-            wc = WorkloadCost.objects.filter(
+            wc_qs = WorkloadCost.objects.filter(
                 snapshot__timestamp__gte=hour_start,
                 snapshot__timestamp__lt=hour_end,
                 namespace=namespace,
                 controller_name=controller
-            ).first()
+            )
             
+            wc = wc_qs.first()
+            cost_val = float(wc.network_cost_total) if wc else 0.0
+            bytes_val = int(wc.network_egress_bytes) if wc else 0
+            czone_val = float(wc.network_cross_zone_cost) if wc else 0.0
+            internet_val = float(wc.network_internet_cost) if wc else 0.0
+
+            total_cost_sum += cost_val
+            total_bytes_sum += bytes_val
+
             data_points.append({
-                'timestamp': hour_start.isoformat(),
-                'value': float(wc.network_cost_total) if wc else 0
+                'timestamp': hour_start.strftime('%Y-%m-%d %H:%M'),
+                'value': round(cost_val, 2),
+                'egress_bytes': bytes_val,
+                'cross_zone_cost': round(czone_val, 2),
+                'internet_cost': round(internet_val, 2)
             })
-        
-        return Response({"data": data_points})
+
+        return Response({
+            "namespace": namespace,
+            "controller": controller,
+            "hours": hours,
+            "total_cost": round(total_cost_sum, 2),
+            "total_egress_gb": round(total_bytes_sum / (1024 ** 3), 2),
+            "data": data_points
+        })
