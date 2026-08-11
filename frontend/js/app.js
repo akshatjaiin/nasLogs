@@ -45,7 +45,7 @@ function initTopHeader() {
 
     // Copy DSN handler
     document.getElementById('top-copy-dsn-btn')?.addEventListener('click', () => {
-        navigator.clipboard.writeText('http://sd_live_9f8a37b120c94e82b7@localhost:8000/api/collector/v1/ingest/1');
+        navigator.clipboard.writeText('http://nas_live_9f8a37b120c94e82b7@localhost:8000/api/collector/v1/ingest/1');
         const btn = document.getElementById('top-copy-dsn-btn');
         btn.innerHTML = `<i data-lucide="check" style="width:14px;height:14px"></i> DSN Copied!`;
         if (window.lucide) window.lucide.createIcons();
@@ -61,10 +61,10 @@ function initSidebar(router) {
     const sidebar = document.getElementById('sidebar');
     sidebar.innerHTML = `
         <div class="sidebar-logo">
-            <div class="logo-icon">🔥</div>
+            <div class="logo-icon">📡</div>
             <div class="logo-text">
-                Smoke Detector
-                <span>Network Cost Incidents</span>
+                NAS Logs
+                <span>Sentry for Network Costs</span>
             </div>
         </div>
 
@@ -111,7 +111,7 @@ function initSidebar(router) {
         </nav>
 
         <div class="sidebar-footer">
-            <span>v0.1.0 · AWS Ready</span>
+            <span>NAS Logs v0.1.0</span>
             <span style="color:var(--success-content)">● Live</span>
         </div>
     `;

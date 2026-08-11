@@ -1,6 +1,6 @@
-# 🦺 Smoke Detector — Network Cost Observability & Root-Cause Attribution
+# 📡 NAS Logs — Sentry for Network Costs & Egress Attribution
 
-> **Sentry-inspired incident response for Kubernetes & cloud network costs.**
+> **Sentry-inspired root-cause attribution and incident response for Kubernetes cloud network costs.**
 
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 ![Django 5.1](https://img.shields.io/badge/django-5.1-green.svg)
@@ -9,15 +9,15 @@
 
 ---
 
-## 💡 Why We Built This
+## 💡 Why We Built NAS Logs
 
-Traditional tools like **Kubecost** or **OpenCost** answer:
+Traditional cloud cost tools like **Kubecost** or **OpenCost** answer:
 > *"How much network cost does this workload accumulate?"*
 
 When a sudden $5,000 egress spike hits your AWS bill, engineers want to know:
 > **"Something changed. What caused the cost spike, and who pushed it?"**
 
-**Smoke Detector** bridges the gap between Kubernetes network telemetry and infrastructure deployment history. It detects network cost anomalies, correlates them against Kubernetes audit events within temporal windows, and generates actionable **Blame Trails** with confidence scores.
+**NAS Logs** bridges the gap between Kubernetes network telemetry and infrastructure deployment history. It detects network cost anomalies, correlates them against Kubernetes audit events within temporal windows, and generates actionable **Blame Trails** with confidence scores.
 
 ---
 
@@ -39,9 +39,9 @@ When a sudden $5,000 egress spike hits your AWS bill, engineers want to know:
                                  │   AWS Cloud / Production VPC    │
                                  │                                  │
 ┌──────────────────────────┐     │  ┌────────────────────────────┐  │
-│  Smoke Detector Central  │     │  │  EKS Kubernetes Cluster    │  │
+│  NAS Logs Central        │     │  │  EKS Kubernetes Cluster    │  │
 │  Observability Server    │     │  │                            │  │
-│  (Django + Postgres +    │◄────┼──┼── Smoke Detector Agent     │  │
+│  (Django + Postgres +    │◄────┼──┼── NAS Logs Agent           │  │
 │   Web Dashboard)         │     │  │   (DaemonSet / OpenCost)   │  │
 └──────────────────────────┘     │  └──────────────┬─────────────┘  │
                                  │                 │ Egress Path    │
@@ -90,7 +90,7 @@ In a second terminal window:
 cd frontend
 
 # Start lightweight local server
-python -m http.server 3000
+python server.py 3000
 ```
 
 Open **`http://localhost:3000`** in your browser!
@@ -99,7 +99,7 @@ Open **`http://localhost:3000`** in your browser!
 
 ## 🧪 Running the Test Suite
 
-Smoke Detector includes a comprehensive test suite covering ingestion, anomaly detection, correlation scoring, incident state management, and alert backends.
+NAS Logs includes a comprehensive test suite covering ingestion, anomaly detection, correlation scoring, incident state management, and alert backends.
 
 ```bash
 cd backend
