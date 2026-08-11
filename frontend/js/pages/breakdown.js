@@ -89,7 +89,7 @@ export async function renderBreakdown(container) {
                 <!-- Workload Telemetry History Modal Drawer -->
                 <div id="workload-history-drawer" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:999;justify-content:flex-end">
                     <div style="width:680px;height:100vh;background:var(--bg-primary);border-left:1px solid var(--border-primary);padding:var(--space-2xl);overflow-y:auto;position:relative">
-                        <button id="btn-close-drawer" class="btn btn-ghost" style="position:absolute;top:20px;right:20px;padding:4px 10px">✕ Esc</button>
+                        <button id="btn-close-drawer" class="btn btn-ghost" style="position:absolute;top:20px;right:20px;padding:4px 10px"> Esc</button>
                         
                         <div id="drawer-content">
                             <div class="loading-skeleton" style="height:300px"></div>

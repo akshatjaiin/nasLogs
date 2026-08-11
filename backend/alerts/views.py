@@ -25,7 +25,7 @@ class AlertRuleViewSet(viewsets.ModelViewSet):
         
         if rule.channel_type == AlertRule.ChannelType.SLACK and webhook_url:
             test_payload = {
-                "text": f"🔥 *[NAS Logs Test Alert]* Connection test for rule `{rule.name}` succeeded!"
+                "text": f" *[NAS Logs Test Alert]* Connection test for rule `{rule.name}` succeeded!"
             }
             try:
                 start = time.time()

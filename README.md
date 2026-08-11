@@ -1,4 +1,4 @@
-# 📡 NAS Logs — Sentry for Network Costs & Egress Attribution
+#  NAS Logs — Sentry for Network Costs & Egress Attribution
 
 > **Sentry-inspired root-cause attribution and incident response for cloud network costs.**
 
@@ -10,7 +10,7 @@
 
 ---
 
-## 💡 Why We Built NAS Logs
+##  Why We Built NAS Logs
 
 Traditional cloud cost tools like **Kubecost** or **OpenCost** answer:
 > *"How much network cost does this workload accumulate?"*
@@ -22,19 +22,19 @@ When a sudden $5,000 egress spike hits your AWS bill, engineers want to know:
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
-- **🎯 Blame Trail (Waterfall Timeline)**: Visualizes network cost spikes alongside correlated Kubernetes events (Deployments, ConfigMaps, HPAs, StatefulSets) within a $\pm 30$-minute window.
-- **⚡ Anomaly Detection Engine**: Supports both Percentage Change ($\Delta\%$) and statistical Z-score algorithms with configurable baseline windows (default 7 days / 168 hours).
-- **🧠 Correlation & Confidence Scoring**: Scores candidate Kubernetes events using weighted temporal delta, namespace isolation, and event type significance.
-- **🔑 Sentry DSN Telemetry Ingestion (`/api/collector/v1/ingest/<project_id>/`)**: Ingests workload egress metrics using Project DSN keys, auto-calculates statistical anomalies, and creates fingerprinted incidents.
-- **📊 Sentry-Inspired UI & Project Picker**: Clean HTML5 SPA frontend featuring multi-project switcher (`Acme Corp / Production Cluster (AWS)`), 24h cost trend area charts, inline workload sparklines, interactive telemetry history drawers, and hierarchical namespace breakdown trees.
-- **🔔 Slack Alerts**: Formatted webhook alerts delivering structured evidence payloads and link-backs to the incident dashboard.
-- **🛡️ Out-of-Band & Safe**: Does not sit in the traffic path. Telemetry collection runs passively with zero latency penalty or risk to production workloads.
+- ** Blame Trail (Waterfall Timeline)**: Visualizes network cost spikes alongside correlated Kubernetes events (Deployments, ConfigMaps, HPAs, StatefulSets) within a $\pm 30$-minute window.
+- ** Anomaly Detection Engine**: Supports both Percentage Change ($\Delta\%$) and statistical Z-score algorithms with configurable baseline windows (default 7 days / 168 hours).
+- ** Correlation & Confidence Scoring**: Scores candidate Kubernetes events using weighted temporal delta, namespace isolation, and event type significance.
+- ** Sentry DSN Telemetry Ingestion (`/api/collector/v1/ingest/<project_id>/`)**: Ingests workload egress metrics using Project DSN keys, auto-calculates statistical anomalies, and creates fingerprinted incidents.
+- ** Sentry-Inspired UI & Project Picker**: Clean HTML5 SPA frontend featuring multi-project switcher (`Acme Corp / Production Cluster (AWS)`), 24h cost trend area charts, inline workload sparklines, interactive telemetry history drawers, and hierarchical namespace breakdown trees.
+- ** Slack Alerts**: Formatted webhook alerts delivering structured evidence payloads and link-backs to the incident dashboard.
+- **️ Out-of-Band & Safe**: Does not sit in the traffic path. Telemetry collection runs passively with zero latency penalty or risk to production workloads.
 
 ---
 
-## 🐳 Self-Hosted 1-Click Setup (Docker Compose)
+##  Self-Hosted 1-Click Setup (Docker Compose)
 
 Anyone can spin up the full production stack (PostgreSQL + Redis + Django Web API + Celery Worker + Celery Beat + NGINX Web UI) in 30 seconds:
 
@@ -55,7 +55,7 @@ Open **`http://localhost:3000`** in your browser!
 
 ---
 
-## 🛠️ Local Development Setup (Manual)
+## ️ Local Development Setup (Manual)
 
 ### 1. Clone & Set Up Backend
 
@@ -78,7 +78,7 @@ Open **`http://localhost:3001`** in your browser. All SPA routes (`/alerts`, `/s
 
 ---
 
-## 🔑 DSN Telemetry Ingestion (Sentry-Style)
+##  DSN Telemetry Ingestion (Sentry-Style)
 
 Send workload telemetry batches directly to your project DSN:
 
@@ -114,7 +114,7 @@ Response:
 
 ---
 
-## 🧪 CI/CD Automated Testing (GitHub Actions)
+##  CI/CD Automated Testing (GitHub Actions)
 
 NAS Logs includes 40 automated test cases running on **GitHub Actions CI** on every `git push`:
 
@@ -126,7 +126,7 @@ NAS Logs includes 40 automated test cases running on **GitHub Actions CI** on ev
 
 ---
 
-## 📚 Documentation
+##  Documentation
 
 Detailed architectural design documents are available in the [`docs/`](docs/) directory:
 
@@ -141,6 +141,6 @@ Detailed architectural design documents are available in the [`docs/`](docs/) di
 
 ---
 
-## 📄 License
+##  License
 
 MIT License — see [`LICENSE`](LICENSE) for details.

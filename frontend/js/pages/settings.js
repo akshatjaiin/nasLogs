@@ -181,14 +181,14 @@ export async function renderSettings(container) {
                 try {
                     const res = await api.testOpenCostConnection(urlInput.value);
                     if (res.status === 'connected') {
-                        statusOutput.innerHTML = `<span style="color:var(--success-content)">✓ ${res.message}</span>`;
-                        testBtn.innerHTML = `✓ Connection Tested`;
+                        statusOutput.innerHTML = `<span style="color:var(--success-content)"> ${res.message}</span>`;
+                        testBtn.innerHTML = ` Connection Tested`;
                     } else {
-                        statusOutput.innerHTML = `<span style="color:var(--critical-content)">❌ ${res.message}</span>`;
-                        testBtn.innerHTML = `❌ Connection Failed`;
+                        statusOutput.innerHTML = `<span style="color:var(--critical-content)"> ${res.message}</span>`;
+                        testBtn.innerHTML = ` Connection Failed`;
                     }
                 } catch (err) {
-                    statusOutput.innerHTML = `<span style="color:var(--critical-content)">❌ ${err.message}</span>`;
+                    statusOutput.innerHTML = `<span style="color:var(--critical-content)"> ${err.message}</span>`;
                     testBtn.innerHTML = `Test Connection`;
                 }
                 testBtn.disabled = false;
@@ -217,7 +217,7 @@ export async function renderSettings(container) {
                         critical_pct: document.getElementById('critical-pct-input').value,
                         min_cost_threshold: document.getElementById('min-cost-input').value,
                     });
-                    saveBtn.innerText = '✓ Settings Saved!';
+                    saveBtn.innerText = ' Settings Saved!';
                     setTimeout(() => { saveBtn.innerText = 'Save Settings'; saveBtn.disabled = false; }, 2000);
                 } catch (err) {
                     alert(`Failed to save: ${err.message}`);

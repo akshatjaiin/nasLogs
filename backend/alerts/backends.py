@@ -11,7 +11,7 @@ class SlackBackend:
                 "type": "header",
                 "text": {
                     "type": "plain_text",
-                    "text": f"🚨 {incident.title}",
+                    "text": f" {incident.title}",
                     "emoji": True
                 }
             },

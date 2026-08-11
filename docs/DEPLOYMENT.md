@@ -4,7 +4,7 @@ This guide explains how to deploy **Smoke Detector** into your infrastructure an
 
 ---
 
-## 🏗️ Deployment Overview
+## ️ Deployment Overview
 
 ```
                                  ┌──────────────────────────────────┐
@@ -28,7 +28,7 @@ Smoke Detector runs via **out-of-band telemetry collection**. The agent monitors
 
 ---
 
-## 🚀 Step 1: Deploy Smoke Detector Central Observability Backend
+##  Step 1: Deploy Smoke Detector Central Observability Backend
 
 ### Option A: AWS EC2 / VM via Docker Compose (Quickest)
 
@@ -56,7 +56,7 @@ helm install smokedetector-backend smokedetector/backend \
 
 ---
 
-## 📦 Step 2: Install Agent DaemonSet on Kubernetes Clusters
+##  Step 2: Install Agent DaemonSet on Kubernetes Clusters
 
 To collect pod egress metrics & audit events from your Kubernetes clusters (AWS EKS, GKE, self-managed EC2 nodes):
 
@@ -77,7 +77,7 @@ The agent runs passively on every node, collecting windowed network metrics and 
 
 ---
 
-## ☁️ Step 3: Configure AWS NAT Gateway Telemetry (AWS Attribution)
+## ️ Step 3: Configure AWS NAT Gateway Telemetry (AWS Attribution)
 
 To attribute AWS NAT Gateway data processing fees ($0.045/GB) and cross-AZ traffic back to specific workloads:
 
@@ -100,7 +100,7 @@ The CloudFormation stack grants read-only permission for:
 
 ---
 
-## 🧪 Step 4: Verification & Live Alerting
+##  Step 4: Verification & Live Alerting
 
 1. Open the Smoke Detector Dashboard at `http://<SERVER_IP>:3000`.
 2. Check the **Setup & Agent Deploy** tab in the sidebar.
@@ -109,7 +109,7 @@ The CloudFormation stack grants read-only permission for:
 
 ---
 
-## 🔔 Step 5: Configure Slack Webhook Alerts
+##  Step 5: Configure Slack Webhook Alerts
 
 1. Open **Settings / Alert Rules** in the dashboard.
 2. Add your Slack Incoming Webhook URL:

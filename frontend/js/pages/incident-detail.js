@@ -35,10 +35,10 @@ export async function renderIncidentDetail(container, params) {
                     </div>
                     <div class="action-buttons">
                         <button class="btn btn-ghost" id="btn-ack" ${incident.status !== 'open' ? 'disabled' : ''}>
-                            ${incident.status === 'acknowledged' ? '✓ Acknowledged' : 'Acknowledge'}
+                            ${incident.status === 'acknowledged' ? ' Acknowledged' : 'Acknowledge'}
                         </button>
                         <button class="btn btn-success" id="btn-resolve" ${incident.status === 'resolved' ? 'disabled' : ''}>
-                            ${incident.status === 'resolved' ? '✓ Resolved' : 'Resolve'}
+                            ${incident.status === 'resolved' ? ' Resolved' : 'Resolve'}
                         </button>
                     </div>
                 </div>
