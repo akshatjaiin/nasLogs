@@ -89,6 +89,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'detector.tasks.detect_all_active_anomalies',
         'schedule': 300.0,  # Run every 5 minutes
     },
+    'cleanup-old-snapshots-daily': {
+        'task': 'collector.tasks.cleanup_old_snapshots',
+        'schedule': 86400.0,  # Run daily at midnight
+    },
 }
 
 LOGGING = {
@@ -126,13 +130,21 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 50,
     'DEFAULT_AUTHENTICATION_CLASSES': [],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
+    'DEFAULT_THROTTLE_RATES': {
+        'ingest': '120/minute',
+    }
 }
 
 import sys
+
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:3000')
+
 if 'pytest' in sys.modules or 'test' in sys.argv:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'test_db.sqlite3',
+            'NAME': ':memory:',
         }
     }
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True

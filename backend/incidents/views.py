@@ -17,12 +17,15 @@ class IncidentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = Incident.objects.all()
+        project_id = self.request.query_params.get('project_id')
         status = self.request.query_params.get('status')
         severity = self.request.query_params.get('severity')
         search = self.request.query_params.get('search')
         start_time = self.request.query_params.get('start_time')
         end_time = self.request.query_params.get('end_time')
 
+        if project_id and project_id != 'all':
+            qs = qs.filter(project_id=project_id)
         if status:
             qs = qs.filter(status=status)
         if severity:
@@ -42,18 +45,26 @@ class DashboardSummaryView(APIView):
     permission_classes = []
 
     def get(self, request):
-        open_count = Incident.objects.filter(status=Incident.Status.OPEN).count()
-        critical_count = Incident.objects.filter(
+        project_id = request.query_params.get('project_id')
+        inc_qs = Incident.objects.all()
+        snap_qs = CostSnapshot.objects.all()
+
+        if project_id and project_id != 'all':
+            inc_qs = inc_qs.filter(project_id=project_id)
+            snap_qs = snap_qs.filter(project_id=project_id)
+
+        open_count = inc_qs.filter(status=Incident.Status.OPEN).count()
+        critical_count = inc_qs.filter(
             status=Incident.Status.OPEN, severity='critical'
         ).count()
         
-        recent = Incident.objects.filter(
+        recent = inc_qs.filter(
             status=Incident.Status.OPEN
         ).order_by('-created_at')[:5]
         recent_data = IncidentSerializer(recent, many=True).data
         
         # Calculate total hourly cost from the latest snapshot
-        latest_snapshot = CostSnapshot.objects.order_by('-timestamp').first()
+        latest_snapshot = snap_qs.order_by('-timestamp').first()
         total_hourly_cost = 0
         if latest_snapshot:
             total_hourly_cost = float(
@@ -62,24 +73,21 @@ class DashboardSummaryView(APIView):
                 )['total']
             )
         
-        # 24h cost history (hourly totals)
+        # 24h cost history — single query instead of 24 loop queries
         now = timezone.now()
-        cost_history = []
-        for i in range(24):
-            hour_start = now - timedelta(hours=24-i)
-            hour_end = hour_start + timedelta(hours=1)
-            snapshot = CostSnapshot.objects.filter(
-                timestamp__gte=hour_start,
-                timestamp__lt=hour_end
-            ).first()
-            
-            if snapshot:
-                val = snapshot.workload_costs.aggregate(
-                    total=Coalesce(Sum('network_cost_total'), 0, output_field=DecimalField())
-                )['total']
-                cost_history.append(float(val))
-            else:
-                cost_history.append(0)
+        since_24h = now - timedelta(hours=24)
+        snapshots_24h = snap_qs.filter(
+            timestamp__gte=since_24h
+        ).prefetch_related('workload_costs').order_by('timestamp')
+        
+        # Bucket snapshots into hourly slots
+        cost_history = [0] * 24
+        for snap in snapshots_24h:
+            hours_ago = (now - snap.timestamp).total_seconds() / 3600
+            bucket = int(24 - hours_ago)
+            if 0 <= bucket < 24:
+                total = sum(float(wc.network_cost_total) for wc in snap.workload_costs.all())
+                cost_history[bucket] = max(cost_history[bucket], round(total, 2))
         
         return Response({
             "open_incidents_count": open_count,
@@ -96,8 +104,14 @@ class CostBreakdownView(APIView):
     permission_classes = []
 
     def get(self, request):
+        project_id = request.query_params.get('project_id')
         now = timezone.now()
-        latest_snapshot = CostSnapshot.objects.order_by('-timestamp').first()
+
+        snap_qs = CostSnapshot.objects.all()
+        if project_id and project_id != 'all':
+            snap_qs = snap_qs.filter(project_id=project_id)
+
+        latest_snapshot = snap_qs.order_by('-timestamp').first()
         
         if not latest_snapshot:
             return Response({"namespaces": []})
@@ -113,7 +127,7 @@ class CostBreakdownView(APIView):
         
         # Baseline costs (7 days ago)
         baseline_time = now - timedelta(days=7)
-        baseline_snapshot = CostSnapshot.objects.filter(
+        baseline_snapshot = snap_qs.filter(
             timestamp__lte=baseline_time
         ).order_by('-timestamp').first()
         
@@ -180,6 +194,7 @@ class CostHistoryView(APIView):
         namespace = request.query_params.get('namespace')
         controller = request.query_params.get('controller')
         hours = int(request.query_params.get('hours', 24))
+        project_id = request.query_params.get('project_id')
         
         if not namespace or not controller:
             return Response({"error": "namespace and controller params required"}, status=400)
@@ -192,28 +207,42 @@ class CostHistoryView(APIView):
         # Step size adjustment for long ranges (7d / 30d)
         step = 1 if hours <= 24 else (7 if hours <= 168 else 30)
 
-        for i in range(0, hours, step):
-            hour_start = now - timedelta(hours=hours - i)
-            hour_end = hour_start + timedelta(hours=step)
-            
-            wc_qs = WorkloadCost.objects.filter(
-                snapshot__timestamp__gte=hour_start,
-                snapshot__timestamp__lt=hour_end,
-                namespace=namespace,
-                controller_name=controller
-            )
-            
-            wc = wc_qs.first()
+        since = now - timedelta(hours=hours)
+        wc_qs = WorkloadCost.objects.filter(
+            snapshot__timestamp__gte=since,
+            namespace=namespace,
+            controller_name=controller
+        )
+
+        if project_id and project_id != 'all':
+            wc_qs = wc_qs.filter(snapshot__project_id=project_id)
+
+        workloads = wc_qs.select_related('snapshot').order_by('snapshot__timestamp')
+        
+        # Bucket into time slots
+        num_buckets = hours // step
+        data_points = []
+        buckets = {}
+        
+        for wc in workloads:
+            hours_ago = (now - wc.snapshot.timestamp).total_seconds() / 3600
+            bucket_idx = int((hours - hours_ago) / step)
+            if 0 <= bucket_idx < num_buckets:
+                buckets[bucket_idx] = wc
+        
+        for i in range(num_buckets):
+            slot_time = now - timedelta(hours=hours - (i * step))
+            wc = buckets.get(i)
             cost_val = float(wc.network_cost_total) if wc else 0.0
             bytes_val = int(wc.network_egress_bytes) if wc else 0
             czone_val = float(wc.network_cross_zone_cost) if wc else 0.0
             internet_val = float(wc.network_internet_cost) if wc else 0.0
-
+            
             total_cost_sum += cost_val
             total_bytes_sum += bytes_val
-
+            
             data_points.append({
-                'timestamp': hour_start.strftime('%Y-%m-%d %H:%M'),
+                'timestamp': slot_time.strftime('%Y-%m-%d %H:%M'),
                 'value': round(cost_val, 2),
                 'egress_bytes': bytes_val,
                 'cross_zone_cost': round(czone_val, 2),

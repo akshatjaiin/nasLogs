@@ -48,7 +48,9 @@ function initTopHeader() {
 
     // Copy DSN handler
     document.getElementById('top-copy-dsn-btn')?.addEventListener('click', () => {
-        navigator.clipboard.writeText('http://nas_live_9f8a37b120c94e82b7@localhost:8000/api/collector/v1/ingest/1');
+        import('./api.js').then(({ api }) => api.getProjectSettings(window.currentProjectId))
+            .then(settings => navigator.clipboard.writeText(settings.dsn || ''))
+            .catch(() => navigator.clipboard.writeText('DSN unavailable — check project settings'));
         const btn = document.getElementById('top-copy-dsn-btn');
         btn.innerHTML = `<i data-lucide="check" style="width:14px;height:14px"></i> DSN Copied!`;
         if (window.lucide) window.lucide.createIcons();
@@ -74,12 +76,10 @@ function initSidebar(router) {
         </div>
 
         <div class="project-selector-container">
-            <div class="org-label">Acme Corp</div>
+            <div class="org-label">Organization</div>
             <div class="project-dropdown-wrapper">
                 <select id="project-picker" class="project-dropdown">
-                    <option value="all">All Projects</option>
-                    <option value="1" selected>Production Cluster (AWS)</option>
-                    <option value="2">Staging Cluster (EKS)</option>
+                    <option value="all">Loading projects...</option>
                 </select>
             </div>
         </div>
@@ -174,6 +174,8 @@ window.addEventListener('keydown', (e) => {
 });
 
 // Automatic Live Polling Loop (Every 15 Seconds)
+// Dispatches a custom 'nas:poll' event instead of re-rendering the entire page.
+// Individual pages opt-in to data refresh by listening for this event.
 setInterval(() => {
     pollSecondsRemaining--;
     const badge = document.getElementById('poll-timer-badge');
@@ -181,7 +183,8 @@ setInterval(() => {
         if (pollSecondsRemaining <= 0) {
             badge.innerText = 'Syncing...';
             pollSecondsRemaining = 15;
-            router.resolve();
+            // Fire a custom event instead of wiping the page
+            window.dispatchEvent(new CustomEvent('nas:poll'));
             setTimeout(() => {
                 const b = document.getElementById('poll-timer-badge');
                 if (b) b.innerText = 'Syncing in 15s';
@@ -195,5 +198,22 @@ setInterval(() => {
 // Boot
 initTopHeader();
 initSidebar(router);
+
+// Dynamically load projects into sidebar picker
+(async () => {
+    try {
+        const { api } = await import('./api.js');
+        const data = await api.getProjects();
+        const picker = document.getElementById('project-picker');
+        if (picker && data.projects) {
+            picker.innerHTML = '<option value="all">All Projects</option>' +
+                data.projects.map(p => 
+                    `<option value="${p.id}" ${p.id == window.currentProjectId ? 'selected' : ''}>${p.name}</option>`
+                ).join('');
+        }
+    } catch (e) {
+        console.warn('Could not load projects:', e);
+    }
+})();
 router.resolve();
 if (window.lucide) window.lucide.createIcons();

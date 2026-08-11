@@ -40,11 +40,10 @@ class TestOpenCostConnectionView(APIView):
                 })
         except requests.exceptions.ConnectionError:
             return Response({
-                "status": "connected",
-                "latency_ms": 38,
-                "message": f"Verified OpenCost endpoint format ({url}) — readiness ok (38ms dev fallback)",
+                "status": "failed",
+                "message": f"Connection refused. Could not reach OpenCost at {url}. Ensure the service is running and accessible.",
                 "url": url
-            })
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as e:
             return Response({
                 "status": "failed",

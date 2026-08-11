@@ -25,9 +25,11 @@ class IngestTelemetryView(APIView):
                 opencost_url='http://opencost:9003'
             )
 
-        # 2. DSN Authentication Check (optional bearer key matching)
+        # 2. DSN Authentication (required)
         api_key = request.headers.get('X-Project-Key') or request.query_params.get('sentry_key')
-        if api_key and project.api_key != api_key:
+        if not api_key:
+            return Response({"error": "Missing authentication. Provide X-Project-Key header or sentry_key query param."}, status=status.HTTP_401_UNAUTHORIZED)
+        if project.api_key != api_key:
             return Response({"error": "Invalid DSN authentication key"}, status=status.HTTP_401_UNAUTHORIZED)
 
         # 3. Ingest Payload (batch of workload egress metrics)
@@ -90,15 +92,24 @@ class IngestTelemetryView(APIView):
 
 
 class TrafficFlowsView(APIView):
+    """Aggregated egress traffic flows from real WorkloadCost data, scoped per project."""
     authentication_classes = []
     permission_classes = []
 
+    # AWS NAT Gateway pricing: $0.045 per GB processed
+    NAT_GATEWAY_COST_PER_GB = 0.045
+
     def get(self, request):
-        total_egress_bytes = WorkloadCost.objects.aggregate(total=Sum('network_egress_bytes'))['total'] or 0
-        total_cross_zone = WorkloadCost.objects.aggregate(total=Sum('network_cross_zone_cost'))['total'] or 0
-        total_internet = WorkloadCost.objects.aggregate(total=Sum('network_internet_cost'))['total'] or 0
-        
-        top_workloads = WorkloadCost.objects.values('namespace', 'controller_name').annotate(
+        project_id = request.query_params.get('project_id')
+        qs = WorkloadCost.objects.all()
+        if project_id and project_id != 'all':
+            qs = qs.filter(snapshot__project_id=project_id)
+
+        total_egress_bytes = qs.aggregate(total=Sum('network_egress_bytes'))['total'] or 0
+        total_cross_zone = qs.aggregate(total=Sum('network_cross_zone_cost'))['total'] or 0
+        total_internet = qs.aggregate(total=Sum('network_internet_cost'))['total'] or 0
+
+        top_workloads = qs.values('namespace', 'controller_name').annotate(
             total_bytes=Sum('network_egress_bytes'),
             total_cost=Sum('network_cost_total'),
             internet_cost=Sum('network_internet_cost'),
@@ -107,27 +118,37 @@ class TrafficFlowsView(APIView):
 
         top_destinations = []
         for item in top_workloads:
-            gb = round((item['total_bytes'] or 0) / (1024 ** 3), 2)
+            total_bytes = item['total_bytes'] or 0
+            gb = round(total_bytes / (1024 ** 3), 2)
             cost = float(item['total_cost'] or 0)
             internet = float(item['internet_cost'] or 0)
             czone = float(item['cross_zone_cost'] or 0)
-            cardinality = "High (NAT)" if internet >= czone else "Cross-AZ"
-            
+
+            if internet > czone:
+                traffic_type = "Internet Egress (NAT)"
+            elif czone > 0:
+                traffic_type = "Cross-AZ"
+            else:
+                traffic_type = "Intra-AZ"
+
             top_destinations.append({
-                "destination_ip": f"10.244.{(abs(hash(item['controller_name'])) % 200) + 10}.{(abs(hash(item['namespace'])) % 200) + 1} ({item['namespace']})",
                 "namespace": item['namespace'],
                 "controller": item['controller_name'],
                 "bytes_transferred": f"{gb} GB",
+                "bytes_raw": total_bytes,
                 "cost": round(cost, 2),
-                "cardinality": cardinality
+                "internet_cost": round(internet, 2),
+                "cross_zone_cost": round(czone, 2),
+                "traffic_type": traffic_type
             })
 
+        total_egress_gb = round((total_egress_bytes or 0) / (1024 ** 3), 2)
         internet_val = float(total_internet or 0)
 
         return Response({
-            "total_egress_gb": round((total_egress_bytes or 0) / (1024 ** 3), 1),
+            "total_egress_gb": total_egress_gb,
             "cross_zone_cost": round(float(total_cross_zone or 0), 2),
             "internet_cost": round(internet_val, 2),
-            "nat_gateway_charges": round(internet_val * 0.45, 2),
+            "nat_gateway_estimated_cost": round(total_egress_gb * self.NAT_GATEWAY_COST_PER_GB, 2),
             "top_destinations": top_destinations
         })

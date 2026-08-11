@@ -1,5 +1,12 @@
 export async function renderDocs(container) {
-    const defaultDsn = 'http://nas_live_9f8a37b120c94e82b7@localhost:8000/api/collector/v1/ingest/1';
+    let defaultDsn = 'Loading DSN...';
+    try {
+        const { api } = await import('../api.js');
+        const settings = await api.getProjectSettings(window.currentProjectId || '1');
+        defaultDsn = settings.dsn || 'http://localhost:8000/api/collector/v1/ingest/1';
+    } catch (e) {
+        defaultDsn = 'http://localhost:8000/api/collector/v1/ingest/1';
+    }
 
     container.innerHTML = `
         <div class="page">

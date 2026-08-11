@@ -44,6 +44,17 @@ def collect_cost_snapshot(project_id):
             
         WorkloadCost.objects.bulk_create(workloads)
         logger.info(f"Successfully collected snapshot #{snapshot.id} for project '{project.name}' ({len(workloads)} workloads)")
+        
+        # Trigger anomaly detection on the new snapshot
+        from detector.tasks import detect_anomalies
+        try:
+            detect_anomalies.delay(snapshot.id)
+        except Exception:
+            try:
+                detect_anomalies(snapshot.id)
+            except Exception as e:
+                logger.error(f"Failed to trigger anomaly detection for snapshot #{snapshot.id}: {e}")
+
         return snapshot.id
         
     except OpenCostError as e:
@@ -56,7 +67,26 @@ def collect_all_active_projects():
     active_projects = Project.objects.filter(is_active=True)
     count = 0
     for proj in active_projects:
-        collect_cost_snapshot.delay(proj.id)
+        try:
+            collect_cost_snapshot.delay(proj.id)
+        except Exception:
+            collect_cost_snapshot(proj.id)
         count += 1
     logger.info(f"Triggered periodic ingestion for {count} active projects")
     return count
+
+@shared_task
+def cleanup_old_snapshots():
+    """Daily Celery Beat task: purges CostSnapshots older than each project's retention_days."""
+    active_projects = Project.objects.filter(is_active=True)
+    total_deleted = 0
+    now = timezone.now()
+
+    for proj in active_projects:
+        retention_days = getattr(proj, 'retention_days', 30)
+        cutoff = now - timezone.timedelta(days=retention_days)
+        deleted_count, _ = CostSnapshot.objects.filter(project=proj, timestamp__lt=cutoff).delete()
+        total_deleted += deleted_count
+
+    logger.info(f"Data retention cleanup completed: purged {total_deleted} expired cost snapshots across all active projects")
+    return total_deleted
