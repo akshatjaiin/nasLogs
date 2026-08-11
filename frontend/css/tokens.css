@@ -1,0 +1,133 @@
+:root {
+    /* Backgrounds — deep dark purple-black */
+    --bg-app: #0D0A10;
+    --bg-primary: #1B1821;
+    --bg-secondary: #24202B;
+    --bg-tertiary: #2E2936;
+    --bg-overlay: #393442;
+    --bg-hover: #322D3B;
+    
+    /* Content */
+    --text-heading: #FFFFFF;
+    --text-primary: #E7E5EA;
+    --text-secondary: #B5B0BD;
+    --text-disabled: #958E9F;
+    --text-inverse: #0D0A10;
+    
+    /* Borders */
+    --border-primary: #141119;
+    --border-muted: #534D5E;
+    --border-moderate: #898294;
+    
+    /* Brand accent */
+    --accent: #7553FF;
+    --accent-hover: #8B6FFF;
+    --accent-content: #ABA8F8;
+    --accent-muted: rgba(72, 40, 184, 0.58);
+    --accent-surface: rgba(117, 83, 255, 0.08);
+    
+    /* Status: money-focused semantics */
+    --critical: #FF002B;
+    --critical-content: #F6938C;
+    --critical-surface: rgba(255, 0, 43, 0.12);
+    --warning: #FFCE00;
+    --warning-content: #FFCE00;
+    --warning-surface: rgba(255, 206, 0, 0.10);
+    --success: #00F261;
+    --success-content: #5ECE73;
+    --success-surface: rgba(0, 242, 97, 0.08);
+    --info: #00A7FF;
+    --info-content: #6CB8FF;
+    --info-surface: rgba(0, 167, 255, 0.10);
+    
+    /* Blame trail event colors */
+    --event-deployment: #00A7FF;
+    --event-configmap: #FF8C00;
+    --event-scale: #00F261;
+    --event-statefulset: #6048D0;
+    --event-baseline: #7553FF;
+    --event-spike: #FF002B;
+    --event-unknown: #898294;
+    
+    /* Typography */
+    --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --text-xs: 0.6875rem;
+    --text-sm: 0.75rem;
+    --text-md: 0.875rem;
+    --text-lg: 1rem;
+    --text-xl: 1.125rem;
+    --text-2xl: 1.375rem;
+    --text-3xl: 1.75rem;
+    
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 12px;
+    --space-lg: 16px;
+    --space-xl: 24px;
+    --space-2xl: 32px;
+    --space-3xl: 48px;
+    
+    /* Radius */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+    
+    /* Motion */
+    --duration-fast: 120ms;
+    --duration-moderate: 160ms;
+    --duration-slow: 240ms;
+    --ease-smooth: cubic-bezier(0.72, 0, 0.16, 1);
+    --ease-snap: cubic-bezier(0.8, -0.4, 0.5, 1);
+    --ease-enter: cubic-bezier(0.24, 1, 0.32, 1);
+    --ease-exit: cubic-bezier(0.64, 0, 0.8, 0);
+    
+    /* Layout */
+    --sidebar-width: 240px;
+    --header-height: 56px;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    color: var(--text-primary);
+    background: var(--bg-app);
+    line-height: 1.5;
+    overflow-x: hidden;
+}
+
+a {
+    color: var(--accent-content);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--ease-smooth);
+}
+a:hover { color: var(--accent); }
+
+::selection {
+    background: var(--accent-muted);
+    color: var(--text-heading);
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-muted); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-moderate); }
