@@ -1,6 +1,6 @@
 :root {
-    /* Backgrounds — deep dark purple-black */
-    --bg-app: #0D0A10;
+    /* Backgrounds — Sentry Dark Theme Palette */
+    --bg-app: #141119;
     --bg-primary: #1B1821;
     --bg-secondary: #24202B;
     --bg-tertiary: #2E2936;
@@ -11,36 +11,39 @@
     --text-heading: #FFFFFF;
     --text-primary: #E7E5EA;
     --text-secondary: #B5B0BD;
-    --text-disabled: #958E9F;
-    --text-inverse: #0D0A10;
+    --text-disabled: #787383;
+    --text-inverse: #141119;
     
     /* Borders */
-    --border-primary: #141119;
-    --border-muted: #534D5E;
-    --border-moderate: #898294;
+    --border-primary: #2E2936;
+    --border-muted: #393442;
+    --border-moderate: #534D5E;
     
-    /* Brand accent */
+    /* Brand Accent — Sentry Purple */
     --accent: #7553FF;
     --accent-hover: #8B6FFF;
     --accent-content: #ABA8F8;
-    --accent-muted: rgba(72, 40, 184, 0.58);
-    --accent-surface: rgba(117, 83, 255, 0.08);
+    --accent-muted: rgba(117, 83, 255, 0.25);
+    --accent-surface: rgba(117, 83, 255, 0.12);
     
-    /* Status: money-focused semantics */
+    /* Status: Money-focused semantics */
     --critical: #FF002B;
-    --critical-content: #F6938C;
-    --critical-surface: rgba(255, 0, 43, 0.12);
+    --critical-content: #FF6B7A;
+    --critical-surface: rgba(255, 0, 43, 0.15);
+    
     --warning: #FFCE00;
-    --warning-content: #FFCE00;
-    --warning-surface: rgba(255, 206, 0, 0.10);
+    --warning-content: #FFD93D;
+    --warning-surface: rgba(255, 206, 0, 0.12);
+    
     --success: #00F261;
     --success-content: #5ECE73;
-    --success-surface: rgba(0, 242, 97, 0.08);
+    --success-surface: rgba(0, 242, 97, 0.12);
+    
     --info: #00A7FF;
     --info-content: #6CB8FF;
-    --info-surface: rgba(0, 167, 255, 0.10);
+    --info-surface: rgba(0, 167, 255, 0.12);
     
-    /* Blame trail event colors */
+    /* Event Colors for Blame Trail */
     --event-deployment: #00A7FF;
     --event-configmap: #FF8C00;
     --event-scale: #00F261;
@@ -52,22 +55,23 @@
     /* Typography */
     --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    --text-xs: 0.6875rem;
-    --text-sm: 0.75rem;
-    --text-md: 0.875rem;
-    --text-lg: 1rem;
-    --text-xl: 1.125rem;
-    --text-2xl: 1.375rem;
-    --text-3xl: 1.75rem;
+    
+    --text-xs: 0.6875rem; /* 11px */
+    --text-sm: 0.75rem;   /* 12px */
+    --text-md: 0.875rem;  /* 14px */
+    --text-lg: 1rem;      /* 16px */
+    --text-xl: 1.125rem;  /* 18px */
+    --text-2xl: 1.375rem; /* 22px */
+    --text-3xl: 1.75rem;  /* 28px */
     
     /* Spacing */
     --space-xs: 4px;
     --space-sm: 8px;
     --space-md: 12px;
     --space-lg: 16px;
-    --space-xl: 24px;
-    --space-2xl: 32px;
-    --space-3xl: 48px;
+    --space-xl: 20px;
+    --space-2xl: 28px;
+    --space-3xl: 40px;
     
     /* Radius */
     --radius-sm: 4px;
@@ -77,20 +81,17 @@
     
     /* Shadows */
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-    --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
     
     /* Motion */
     --duration-fast: 120ms;
     --duration-moderate: 160ms;
     --duration-slow: 240ms;
     --ease-smooth: cubic-bezier(0.72, 0, 0.16, 1);
-    --ease-snap: cubic-bezier(0.8, -0.4, 0.5, 1);
-    --ease-enter: cubic-bezier(0.24, 1, 0.32, 1);
-    --ease-exit: cubic-bezier(0.64, 0, 0.8, 0);
     
     /* Layout */
-    --sidebar-width: 240px;
+    --sidebar-width: 230px;
     --header-height: 56px;
 }
 
@@ -128,6 +129,6 @@ a:hover { color: var(--accent); }
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-muted); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--border-moderate); }
+::-webkit-scrollbar-track { background: var(--bg-app); }
+::-webkit-scrollbar-thumb { background: var(--border-primary); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-muted); }
