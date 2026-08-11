@@ -37,7 +37,7 @@ export class Router {
         }
 
         this.currentRoute = matched;
-        const container = document.getElementById('main-content');
+        const container = document.getElementById('page-container');
         container.innerHTML = '';
         matched.render(container, params);
 

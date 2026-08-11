@@ -11,6 +11,51 @@ import { renderMockTraffic } from './pages/mock_traffic.js';
 // Global active project state
 window.currentProjectId = '1';
 
+// Initialize Sentry-style Top Global Header Bar
+function initTopHeader() {
+    const header = document.getElementById('top-header');
+    header.innerHTML = `
+        <div class="top-header-left">
+            <div class="global-search">
+                <i data-lucide="search" style="width:14px;height:14px;color:var(--text-disabled)"></i>
+                <input type="text" placeholder="Search incidents, workloads, or IP destinations..." id="global-search-input">
+                <span class="shortcut-chip">Ctrl+K</span>
+            </div>
+        </div>
+
+        <div class="top-header-right">
+            <div style="display:flex;align-items:center;gap:6px;font-size:var(--text-xs);color:var(--text-secondary);background:var(--bg-secondary);padding:4px 10px;border-radius:var(--radius-md);border:1px solid var(--border-primary)">
+                <span style="color:var(--success-content)">●</span>
+                <span>Live Telemetry</span>
+                <span style="color:var(--border-muted)">|</span>
+                <span style="font-family:var(--font-mono);color:var(--text-heading)">1,014 Snapshots</span>
+            </div>
+
+            <button class="btn btn-ghost" id="top-copy-dsn-btn" style="height:32px;font-size:var(--text-xs)">
+                <i data-lucide="key" style="width:14px;height:14px"></i>
+                Copy DSN
+            </button>
+
+            <a href="/docs" data-link class="btn btn-primary" style="height:32px;font-size:var(--text-xs)">
+                <i data-lucide="download-cloud" style="width:14px;height:14px"></i>
+                Deploy Agent
+            </a>
+        </div>
+    `;
+
+    // Copy DSN handler
+    document.getElementById('top-copy-dsn-btn')?.addEventListener('click', () => {
+        navigator.clipboard.writeText('http://sd_live_9f8a37b120c94e82b7@localhost:8000/api/collector/v1/ingest/1');
+        const btn = document.getElementById('top-copy-dsn-btn');
+        btn.innerHTML = `<i data-lucide="check" style="width:14px;height:14px"></i> DSN Copied!`;
+        if (window.lucide) window.lucide.createIcons();
+        setTimeout(() => {
+            btn.innerHTML = `<i data-lucide="key" style="width:14px;height:14px"></i> Copy DSN`;
+            if (window.lucide) window.lucide.createIcons();
+        }, 2000);
+    });
+}
+
 // Initialize Sentry-style sidebar with Organization & Project picker
 function initSidebar(router) {
     const sidebar = document.getElementById('sidebar');
@@ -36,31 +81,31 @@ function initSidebar(router) {
 
         <nav class="sidebar-nav">
             <a href="/" data-link class="nav-item active" data-route="/">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                <i data-lucide="layout-dashboard" class="nav-icon"></i>
                 Overview
             </a>
             <a href="/incidents" data-link class="nav-item" data-route="/incidents">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <i data-lucide="alert-triangle" class="nav-icon"></i>
                 Cost Incidents
             </a>
             <a href="/breakdown" data-link class="nav-item" data-route="/breakdown">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                <i data-lucide="bar-chart-3" class="nav-icon"></i>
                 Cost Breakdown
             </a>
             <a href="/traffic" data-link class="nav-item" data-route="/traffic">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <i data-lucide="activity" class="nav-icon"></i>
                 Traffic Flows <span style="font-size:9px;color:var(--warning-content);margin-left:auto">MOCK</span>
             </a>
             <a href="/alerts" data-link class="nav-item" data-route="/alerts">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                <i data-lucide="bell" class="nav-icon"></i>
                 Alert Rules <span style="font-size:9px;color:var(--warning-content);margin-left:auto">MOCK</span>
             </a>
             <a href="/settings" data-link class="nav-item" data-route="/settings">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <i data-lucide="settings" class="nav-icon"></i>
                 Project Keys & DSN <span style="font-size:9px;color:var(--warning-content);margin-left:auto">MOCK</span>
             </a>
             <a href="/docs" data-link class="nav-item" data-route="/docs">
-                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <i data-lucide="book-open" class="nav-icon"></i>
                 Setup & Agent Deploy
             </a>
         </nav>
@@ -90,9 +135,19 @@ export const router = new Router([
     { path: '/docs', render: renderDocs },
 ]);
 
+// Trigger Lucide icons on route change
+window.addEventListener('popstate', () => {
+    if (window.lucide) window.lucide.createIcons();
+});
+
 // Global navigation helper
-window.navigateTo = (path) => router.navigate(path);
+window.navigateTo = (path) => {
+    router.navigate(path);
+    if (window.lucide) setTimeout(() => window.lucide.createIcons(), 50);
+};
 
 // Boot
+initTopHeader();
 initSidebar(router);
 router.resolve();
+if (window.lucide) window.lucide.createIcons();
