@@ -4,7 +4,7 @@ from .views import HealthCheckView
 from incidents.views import IncidentViewSet, DashboardSummaryView, CostBreakdownView, CostHistoryView
 from alerts.views import AlertRuleViewSet
 from core.views import TestOpenCostConnectionView, ProjectSettingsView, ProjectManagementView
-from collector.views import TrafficFlowsView
+from collector.views import TrafficFlowsView, IngestTelemetryView
 
 router = DefaultRouter()
 router.register(r'incidents', IncidentViewSet, basename='incident')
@@ -19,5 +19,6 @@ urlpatterns = [
     path('projects/settings/', ProjectSettingsView.as_view(), name='project-settings'),
     path('projects/all/', ProjectManagementView.as_view(), name='projects-all'),
     path('traffic/flows/', TrafficFlowsView.as_view(), name='traffic-flows'),
+    path('collector/v1/ingest/<int:project_id>/', IngestTelemetryView.as_view(), name='ingest-telemetry'),
     path('', include(router.urls)),
 ]
