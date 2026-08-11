@@ -1,6 +1,6 @@
 # 🦺 Smoke Detector — Network Cost Observability & Root-Cause Attribution
 
-> **Sentry-inspired incident response for Kubernetes cloud network costs.**
+> **Sentry-inspired incident response for Kubernetes & cloud network costs.**
 
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 ![Django 5.1](https://img.shields.io/badge/django-5.1-green.svg)
@@ -26,42 +26,33 @@ When a sudden $5,000 egress spike hits your AWS bill, engineers want to know:
 - **🎯 Blame Trail (Waterfall Timeline)**: Visualizes network cost spikes alongside correlated Kubernetes events (Deployments, ConfigMaps, HPAs, StatefulSets) within a $\pm 30$-minute window.
 - **⚡ Anomaly Detection Engine**: Supports both Percentage Change ($\Delta\%$) and statistical Z-score algorithms with configurable baseline windows (default 7 days / 168 hours).
 - **🧠 Correlation & Confidence Scoring**: Scores candidate Kubernetes events using weighted temporal delta, namespace isolation, and event type significance.
-- **📊 Sentry-Inspired Dark UI**: Pure Vanilla JS + Chart.js frontend featuring 24h cost trend area charts, inline workload sparklines, and hierarchical namespace drill-down trees.
+- **📊 Sentry-Inspired UI & Project Picker**: Clean HTML5 SPA frontend featuring multi-project & org switcher (`Acme Corp / Production Cluster (AWS)`), 24h cost trend area charts, inline workload sparklines, and hierarchical namespace breakdown trees.
 - **🔔 Slack Alerts**: Formatted webhook alerts delivering structured evidence payloads and link-backs to the incident dashboard.
 - **🛡️ Out-of-Band & Safe**: Does not sit in the traffic path. Telemetry collection runs passively with zero latency penalty or risk to production workloads.
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ System Architecture & AWS Setup
 
 ```
-Kubernetes Workloads
-        │
-        ▼ (Passive Egress Telemetry)
-┌─────────────────────────────────┐
-│ OpenCost / Prometheus Collector │
-└────────────────┬────────────────┘
-                 │ HTTP Telemetry Snapshots
-                 ▼
-┌─────────────────────────────────┐
-│ Django REST Framework Backend   │
-│                                 │
-│  ├── Ingestion Engine           │
-│  ├── Anomaly Detector           │
-│  ├── Correlation Engine         │
-│  └── Incident Store             │
-└────────────────┬────────────────┘
-                 │ REST API (JSON)
-                 ▼
-┌─────────────────────────────────┐
-│ Sentry-Inspired Dashboard (SPA) │
-│                                 │
-│  ├── Overview & Trend Charts    │
-│  ├── Cost Incidents & Sparklines│
-│  ├── Blame Trail Waterfall      │
-│  └── Cost Breakdown Tree        │
-└─────────────────────────────────┘
+                                 ┌──────────────────────────────────┐
+                                 │   AWS Cloud / Production VPC    │
+                                 │                                  │
+┌──────────────────────────┐     │  ┌────────────────────────────┐  │
+│  Smoke Detector Central  │     │  │  EKS Kubernetes Cluster    │  │
+│  Observability Server    │     │  │                            │  │
+│  (Django + Postgres +    │◄────┼──┼── Smoke Detector Agent     │  │
+│   Web Dashboard)         │     │  │   (DaemonSet / OpenCost)   │  │
+└──────────────────────────┘     │  └──────────────┬─────────────┘  │
+                                 │                 │ Egress Path    │
+                                 │                 v                │
+                                 │  ┌────────────────────────────┐  │
+                                 │  │  AWS NAT Gateway           │  │
+                                 │  └────────────────────────────┘  │
+                                 └──────────────────────────────────┘
 ```
+
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for step-by-step instructions on deploying the agent DaemonSet on AWS EKS and configuring AWS NAT Gateway CloudWatch telemetry.
 
 ---
 
@@ -117,17 +108,8 @@ pytest
 
 Output:
 ```text
-======================== 36 passed in 1.42s ========================
+======================== 36 passed in 18.95s ========================
 ```
-
----
-
-## 📊 Dashboard Overview
-
-- **Overview Dashboard (`/#/`)**: High-level KPIs, 24-hour cost trend area chart, and recent critical alerts.
-- **Cost Incidents (`/#/incidents`)**: Searchable, filterable list of open/acknowledged/resolved cost anomalies with inline sparkline charts.
-- **Incident Detail (`/#/incidents/:id`)**: **The Blame Trail view** — waterfall timeline matching cost spikes against deployment changes, accompanied by 3-column evidence cards.
-- **Cost Breakdown (`/#/breakdown`)**: Namespace-to-controller tree view with 7-day cost deltas and horizontal breakdown charts.
 
 ---
 
@@ -135,9 +117,10 @@ Output:
 
 Detailed architectural and design documents are available in the [`docs/`](docs/) directory:
 
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Production AWS & EKS installation guide
 - [`docs/research.md`](docs/research.md) — Market analysis & technical foundations
 - [`docs/sentry-study.md`](docs/sentry-study.md) — Sentry architectural patterns & takeaways
-- [`docs/system-design.md`](docs/system-design.md) — Ingestion pipeline & database schema
+- [`docs/system-design.md`](docs/system-design.md) — System architecture, data flow, and DB schema
 - [`docs/technical-risks.md`](docs/technical-risks.md) — High-cardinality telemetry & NAT attribution risk analysis
 - [`docs/test-plan.md`](docs/test-plan.md) — Comprehensive test specification matrix
 - [`docs/test-report.md`](docs/test-report.md) — Automated test verification summary

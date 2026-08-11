@@ -1,3 +1,39 @@
+/* ========== PROJECT SELECTOR DROPDOWN (SENTRY STYLE) ========== */
+.project-selector-container {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border-primary);
+    background: var(--bg-primary);
+}
+
+.project-selector-container .org-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-disabled);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 3px;
+    padding-left: 2px;
+}
+
+.project-dropdown {
+    width: 100%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    padding: 6px var(--space-sm);
+    color: var(--text-heading);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    font-family: var(--font-body);
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--duration-fast) var(--ease-smooth);
+}
+
+.project-dropdown:hover, .project-dropdown:focus {
+    border-color: var(--accent);
+}
+
 /* ========== PANELS & CARDS ========== */
 .panel {
     background: var(--bg-secondary);

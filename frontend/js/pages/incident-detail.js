@@ -15,7 +15,7 @@ export async function renderIncidentDetail(container, params) {
         container.innerHTML = `
             <div class="page">
                 <div class="breadcrumb">
-                    <a href="#/incidents">Cost Incidents</a>
+                    <a href="/incidents" data-link>Cost Incidents</a>
                     <span class="sep">›</span>
                     <span>${workload.namespace || ''}/${workload.controller || ''}</span>
                 </div>

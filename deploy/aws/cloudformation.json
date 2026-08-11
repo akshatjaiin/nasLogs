@@ -1,0 +1,63 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS IAM Role and VPC Flow Logs Collector configuration for Smoke Detector Network Cost Attribution",
+  "Parameters": {
+    "SmokeDetectorBackendRoleArn": {
+      "Type": "String",
+      "Description": "IAM Role ARN or Service Account of the Smoke Detector Backend"
+    }
+  },
+  "Resources": {
+    "SmokeDetectorAWSReadPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "SmokeDetectorNetworkMetricsPolicy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cloudwatch:GetMetricData",
+                "cloudwatch:GetMetricStatistics",
+                "ec2:DescribeNatGateways",
+                "ec2:DescribeNetworkInterfaces",
+                "ec2:DescribeVpcs",
+                "ec2:DescribeSubnets",
+                "ce:GetCostAndUsage"
+              ],
+              "Resource": "*"
+            }
+          ]
+        },
+        "Roles": [
+          { "Ref": "SmokeDetectorIAMRole" }
+        ]
+      }
+    },
+    "SmokeDetectorIAMRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "SmokeDetectorAWSAttributionRole",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "RoleArn": {
+      "Description": "ARN of the Smoke Detector AWS Attribution IAM Role",
+      "Value": { "Fn::GetAtt": [ "SmokeDetectorIAMRole", "Arn" ] }
+    }
+  }
+}

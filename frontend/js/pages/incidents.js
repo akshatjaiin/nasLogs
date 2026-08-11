@@ -64,7 +64,7 @@ export async function renderIncidents(container) {
                             const baseline = anomaly.baseline || 0;
                             const costHistory = ev.cost_history || [];
                             return `
-                                <div class="incident-row" onclick="window.location.hash='/incidents/${inc.id}'">
+                                <div class="incident-row" onclick="window.navigateTo('/incidents/${inc.id}')">
                                     <div class="severity-dot ${inc.severity}"></div>
                                     <div class="incident-info">
                                         <div class="incident-title">${inc.title} <span style="color: ${inc.severity === 'critical' ? 'var(--critical-content)' : 'var(--warning-content)'}">

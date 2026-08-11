@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: smoke-detector-agent
+  namespace: smoke-detector
+  labels:
+    app.kubernetes.io/name: smoke-detector-agent
+    app.kubernetes.io/component: collector
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: smoke-detector-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: smoke-detector-agent
+    spec:
+      serviceAccountName: smoke-detector-agent
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: opencost-telemetry-collector
+        image: quay.io/kubecost/opencost-cost-model:v1.108.0
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: false
+          capabilities:
+            add: ["NET_ADMIN", "NET_RAW"]
+        env:
+        - name: CLUSTER_ID
+          value: "production-aws-us-east-1"
+        - name: PROMETHEUS_SERVER_ENDPOINT
+          value: "http://prometheus-k8s.monitoring.svc:9090"
+        - name: SMOKE_DETECTOR_BACKEND_URL
+          value: "http://smokedetector-backend.internal.company.com/api"
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 20m
+            memory: 32Mi
+        ports:
+        - containerPort: 9003
+          name: http-metrics
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: smoke-detector-agent
+  namespace: smoke-detector
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: smoke-detector-agent
+rules:
+- apiGroups: [""]
+  resources: ["pods", "namespaces", "nodes", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: smoke-detector-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: smoke-detector-agent
+subjects:
+- kind: ServiceAccount
+  name: smoke-detector-agent
+  namespace: smoke-detector
