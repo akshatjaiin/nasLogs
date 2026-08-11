@@ -1,60 +1,61 @@
 :root {
-    /* Backgrounds — Sentry Dark Theme Palette */
-    --bg-app: #141119;
-    --bg-primary: #1B1821;
-    --bg-secondary: #24202B;
-    --bg-tertiary: #2E2936;
-    --bg-overlay: #393442;
-    --bg-hover: #322D3B;
+    /* Backgrounds — Sentry Dark Theme Palette with Subtle Elevation */
+    --bg-app: #0E0B12;
+    --bg-app-radial: radial-gradient(ellipse at top, #1A1526 0%, #0E0B12 100%);
+    --bg-primary: #16121E;
+    --bg-secondary: #1E1929;
+    --bg-tertiary: #272134;
+    --bg-overlay: #322A42;
+    --bg-hover: #2D263B;
     
-    /* Content */
+    /* Content Colors */
     --text-heading: #FFFFFF;
-    --text-primary: #E7E5EA;
-    --text-secondary: #B5B0BD;
-    --text-disabled: #787383;
-    --text-inverse: #141119;
+    --text-primary: #EAE6F2;
+    --text-secondary: #B1A9C2;
+    --text-disabled: #776E87;
+    --text-inverse: #0E0B12;
     
     /* Borders */
-    --border-primary: #2E2936;
-    --border-muted: #393442;
-    --border-moderate: #534D5E;
+    --border-primary: rgba(255, 255, 255, 0.08);
+    --border-muted: rgba(255, 255, 255, 0.14);
+    --border-moderate: rgba(255, 255, 255, 0.22);
     
     /* Brand Accent — Sentry Purple */
     --accent: #7553FF;
     --accent-hover: #8B6FFF;
-    --accent-content: #ABA8F8;
-    --accent-muted: rgba(117, 83, 255, 0.25);
-    --accent-surface: rgba(117, 83, 255, 0.12);
+    --accent-content: #B4A0FF;
+    --accent-muted: rgba(117, 83, 255, 0.30);
+    --accent-surface: rgba(117, 83, 255, 0.15);
     
-    /* Status: Money-focused semantics */
-    --critical: #FF002B;
-    --critical-content: #FF6B7A;
-    --critical-surface: rgba(255, 0, 43, 0.15);
+    /* Status Colors */
+    --critical: #FF3B30;
+    --critical-content: #FF6B63;
+    --critical-surface: rgba(255, 59, 48, 0.15);
     
-    --warning: #FFCE00;
-    --warning-content: #FFD93D;
-    --warning-surface: rgba(255, 206, 0, 0.12);
+    --warning: #FFCC00;
+    --warning-content: #FFE066;
+    --warning-surface: rgba(255, 204, 0, 0.15);
     
-    --success: #00F261;
-    --success-content: #5ECE73;
-    --success-surface: rgba(0, 242, 97, 0.12);
+    --success: #34C759;
+    --success-content: #66E085;
+    --success-surface: rgba(52, 199, 89, 0.15);
     
     --info: #00A7FF;
     --info-content: #6CB8FF;
-    --info-surface: rgba(0, 167, 255, 0.12);
+    --info-surface: rgba(0, 167, 255, 0.15);
     
     /* Event Colors for Blame Trail */
     --event-deployment: #00A7FF;
-    --event-configmap: #FF8C00;
-    --event-scale: #00F261;
-    --event-statefulset: #6048D0;
+    --event-configmap: #FF9500;
+    --event-scale: #34C759;
+    --event-statefulset: #AF52DE;
     --event-baseline: #7553FF;
-    --event-spike: #FF002B;
-    --event-unknown: #898294;
+    --event-spike: #FF3B30;
+    --event-unknown: #8E8E93;
     
-    /* Typography */
-    --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    /* Typography — Google Fonts Inter & JetBrains Mono */
+    --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
     
     --text-xs: 0.6875rem; /* 11px */
     --text-sm: 0.75rem;   /* 12px */
@@ -80,15 +81,15 @@
     --radius-xl: 12px;
     
     /* Shadows */
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
-    --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
     
     /* Motion */
     --duration-fast: 120ms;
     --duration-moderate: 160ms;
     --duration-slow: 240ms;
-    --ease-smooth: cubic-bezier(0.72, 0, 0.16, 1);
+    --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
     
     /* Layout */
     --sidebar-width: 230px;
@@ -111,7 +112,8 @@ body {
     font-family: var(--font-body);
     font-size: var(--text-md);
     color: var(--text-primary);
-    background: var(--bg-app);
+    background: var(--bg-app-radial);
+    background-attachment: fixed;
     line-height: 1.5;
     overflow-x: hidden;
 }
@@ -130,5 +132,5 @@ a:hover { color: var(--accent); }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-app); }
-::-webkit-scrollbar-thumb { background: var(--border-primary); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--border-muted); }
+::-webkit-scrollbar-thumb { background: var(--border-muted); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-moderate); }
