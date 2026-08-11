@@ -1,11 +1,10 @@
-// Dual-Mode SPA Router (Supports both Path Routing and Hash Fallback)
+// Clean HTML5 History Router (No '#' in URLs)
 export class Router {
     constructor(routes) {
         this.routes = routes;
         this.currentRoute = null;
         
         window.addEventListener('popstate', () => this.resolve());
-        window.addEventListener('hashchange', () => this.resolve());
         
         // Intercept internal link clicks globally
         document.addEventListener('click', (e) => {
@@ -18,9 +17,12 @@ export class Router {
     }
 
     resolve() {
-        // Read hash first if present (e.g. /#/breakdown), else read pathname (e.g. /breakdown)
-        let path = window.location.hash ? window.location.hash.slice(1) : window.location.pathname;
-        if (!path) path = '/';
+        // Always read clean path, fallback to '/' if hash was present
+        let path = window.location.pathname || '/';
+        if (window.location.hash && window.location.hash.startsWith('#/')) {
+            path = window.location.hash.slice(1);
+            window.history.replaceState(null, '', path);
+        }
 
         let matched = null;
         let params = {};
@@ -57,8 +59,9 @@ export class Router {
     }
 
     navigate(path) {
-        // Set both hash and pushState for 100% server compatibility
-        window.location.hash = path;
+        if (window.location.pathname !== path) {
+            window.history.pushState(null, '', path);
+        }
         this.resolve();
     }
 }

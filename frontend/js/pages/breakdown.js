@@ -76,7 +76,9 @@ export async function renderBreakdown(container) {
                     ${namespaces.length > 0 ? `
                         <div class="chart-panel">
                             <div class="chart-title">Cost by Namespace</div>
-                            <canvas id="breakdown-chart" height="250"></canvas>
+                            <div class="chart-container" style="height:260px;position:relative">
+                                <canvas id="breakdown-chart"></canvas>
+                            </div>
                         </div>
                     ` : ''}
                 </div>
@@ -112,19 +114,20 @@ export async function renderBreakdown(container) {
                                 }]
                             },
                             options: {
-                                responsive: true, maintainAspectRatio: false,
+                                responsive: true,
+                                maintainAspectRatio: false,
                                 indexAxis: 'y',
                                 plugins: {
                                     legend: { display: false },
                                     tooltip: {
-                                        backgroundColor: '#393442', titleColor: '#E7E5EA', bodyColor: '#B5B0BD',
-                                        borderColor: '#534D5E', borderWidth: 1, padding: 12, cornerRadius: 6,
+                                        backgroundColor: '#1E1929', titleColor: '#FFFFFF', bodyColor: '#B1A9C2',
+                                        borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, padding: 12, cornerRadius: 6,
                                         callbacks: { label: (ctx) => `$${ctx.parsed.x.toFixed(2)}/hr` }
                                     }
                                 },
                                 scales: {
-                                    x: { grid: { color: '#1B1821' }, ticks: { color: '#958E9F', font: { size: 11 }, callback: v => '$' + v } },
-                                    y: { grid: { display: false }, ticks: { color: '#E7E5EA', font: { size: 12 } } }
+                                    x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#776E87', font: { size: 10 }, callback: v => '$' + v } },
+                                    y: { grid: { display: false }, ticks: { color: '#EAE6F2', font: { size: 11 } } }
                                 }
                             }
                         });
