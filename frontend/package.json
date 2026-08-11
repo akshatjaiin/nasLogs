@@ -1,0 +1,13 @@
+{
+  "name": "nas-logs-frontend",
+  "version": "0.1.0",
+  "description": "NAS Logs Sentry-inspired Observability Frontend",
+  "type": "module",
+  "scripts": {
+    "dev": "python server.py 3000",
+    "start": "python server.py 3000"
+  },
+  "keywords": ["sentry", "kubernetes", "network-cost", "egress", "observability"],
+  "author": "NAS Logs Authors",
+  "license": "MIT"
+}
