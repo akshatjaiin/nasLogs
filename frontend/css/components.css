@@ -278,6 +278,13 @@
     color: var(--accent-content);
 }
 
+.sparkline-container {
+    width: 140px;
+    height: 36px;
+    position: relative;
+    overflow: hidden;
+}
+
 .incident-meta {
     display: flex;
     align-items: center;

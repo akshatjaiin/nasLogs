@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 @shared_task
 def collect_cost_snapshot(project_id):
     try:
-        project = Project.objects.get(id=project_id)
+        project = Project.objects.get(id=project_id, is_active=True)
     except Project.DoesNotExist:
         return
         
@@ -43,6 +43,20 @@ def collect_cost_snapshot(project_id):
             ))
             
         WorkloadCost.objects.bulk_create(workloads)
+        logger.info(f"Successfully collected snapshot #{snapshot.id} for project '{project.name}' ({len(workloads)} workloads)")
+        return snapshot.id
         
     except OpenCostError as e:
         logger.error(f"Failed to collect cost for project {project_id}: {e}")
+        return None
+
+@shared_task
+def collect_all_active_projects():
+    """Periodic Celery Beat task that triggers cost snapshot ingestion for all active projects."""
+    active_projects = Project.objects.filter(is_active=True)
+    count = 0
+    for proj in active_projects:
+        collect_cost_snapshot.delay(proj.id)
+        count += 1
+    logger.info(f"Triggered periodic ingestion for {count} active projects")
+    return count

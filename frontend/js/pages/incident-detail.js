@@ -87,9 +87,9 @@ export async function renderIncidentDetail(container, params) {
                             const barWidth = Math.max(8, 18 - i * 4);
                             const kind = (corr.event_kind || corr.event || '').toLowerCase();
                             const eventColor = kind.includes('deploy') ? 'deployment' : 
-                                              kind.includes('config') ? 'configmap' :
-                                              kind.includes('hpa') || kind.includes('scale') ? 'scale' :
-                                              kind.includes('stateful') ? 'deployment' : 'unknown';
+                                               kind.includes('config') ? 'configmap' :
+                                               kind.includes('hpa') || kind.includes('scale') ? 'scale' :
+                                               kind.includes('stateful') ? 'deployment' : 'unknown';
                             return `
                                 <div class="trail-event">
                                     <div class="trail-event-label">
@@ -169,7 +169,9 @@ export async function renderIncidentDetail(container, params) {
                             <h4>📊 Cost History</h4>
                             <span style="font-size:var(--text-xs);color:var(--text-disabled)">24h</span>
                         </div>
-                        <canvas id="detail-sparkline" height="120"></canvas>
+                        <div class="chart-container" style="height:140px;position:relative;margin-top:12px">
+                            <canvas id="detail-sparkline"></canvas>
+                        </div>
                     </div>
                 </div>
 
@@ -179,7 +181,7 @@ export async function renderIncidentDetail(container, params) {
                     <div class="panel">
                         <table class="correlations-table">
                             <thead>
-                                <tr>
+                                tr>
                                     <th>#</th>
                                     <th>Event</th>
                                     <th>Resource</th>
@@ -227,7 +229,6 @@ export async function renderIncidentDetail(container, params) {
             const ctx = document.getElementById('detail-sparkline');
             if (ctx) {
                 let historyData = costHistory;
-                // If no cost_history in evidence, fetch from API
                 if (historyData.length === 0 && workload.namespace && workload.controller) {
                     try {
                         const resp = await api.getCostHistory(workload.namespace, workload.controller, 24);
@@ -259,7 +260,7 @@ export async function renderIncidentDetail(container, params) {
                             }},
                             scales: {
                                 x: { display: false },
-                                y: { grid: { color: '#1B1821' }, ticks: { color: '#958E9F', font: { size: 10 }, callback: v => '$' + v } }
+                                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#776E87', font: { size: 10 }, callback: v => '$' + v } }
                             }
                         }
                     });
