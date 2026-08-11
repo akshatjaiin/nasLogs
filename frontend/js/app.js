@@ -128,7 +128,7 @@ function initSidebar(router) {
     });
 }
 
-// Router configuration with clean URLs
+// Router configuration with clean URLs & aliases to prevent 404
 export const router = new Router([
     { path: '/', render: renderOverview },
     { path: '/incidents', render: renderIncidents },
@@ -136,7 +136,10 @@ export const router = new Router([
     { path: '/breakdown', render: renderBreakdown },
     { path: '/traffic', render: renderTraffic },
     { path: '/alerts', render: renderAlerts },
+    { path: '/alerts/rules', render: renderAlerts },
+    { path: '/alerts/settings', render: renderSettings },
     { path: '/settings', render: renderSettings },
+    { path: '/projects/settings', render: renderSettings },
     { path: '/docs', render: renderDocs },
 ]);
 
@@ -155,19 +158,16 @@ window.navigateTo = (path) => {
 window.addEventListener('keydown', (e) => {
     const searchInput = document.getElementById('global-search-input');
     
-    // Ctrl+K or Cmd+K shortcut
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         if (searchInput) searchInput.focus();
     }
     
-    // Escape key shortcut
     if (e.key === 'Escape') {
         if (document.activeElement === searchInput) {
             searchInput.blur();
         }
-        // Close any open modals/drawers
-        document.querySelectorAll('#workload-history-drawer, #modal-create-rule').forEach(el => {
+        document.querySelectorAll('#workload-history-drawer, #modal-create-rule, #modal-add-project').forEach(el => {
             el.style.display = 'none';
         });
     }

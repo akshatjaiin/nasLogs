@@ -5,7 +5,8 @@ export async function renderAlerts(container) {
 
     async function render() {
         try {
-            const rules = await api.getAlertRules('1');
+            const rawRules = await api.getAlertRules('1');
+            const rules = Array.isArray(rawRules) ? rawRules : (rawRules.results || []);
 
             container.innerHTML = `
                 <div class="page">
