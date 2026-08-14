@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# NAS Logs — First-Run Installation Script
+# GressTrace — First-Run Installation Script
 # Inspired by Sentry's ./install.sh
 # ============================================================
 
@@ -8,7 +8,7 @@ set -e
 
 echo ""
 echo "=========================================="
-echo "   NAS Logs — Self-Hosted Setup"
+echo "   ⚡ GressTrace — Self-Hosted Setup"
 echo "=========================================="
 echo ""
 
@@ -44,40 +44,41 @@ fi
 
 # Step 3: Build Docker images
 echo "[3/5] Building Docker images..."
-docker compose build --no-cache
+docker compose build
 
 # Step 4: Start services and run migrations
 echo "[4/5] Starting services..."
 docker compose up -d
 
 echo "   Waiting for services to be ready..."
-sleep 10
+sleep 8
 
 # Step 5: Create initial admin user
 echo "[5/5] Creating initial admin user..."
 echo ""
 
 if [ -z "$INITIAL_USER_EMAIL" ]; then
-    read -p "   Admin email: " INITIAL_USER_EMAIL
+    INITIAL_USER_EMAIL="admin@naslogs.io"
 fi
 if [ -z "$INITIAL_USER_PASSWORD" ]; then
-    read -s -p "   Admin password: " INITIAL_USER_PASSWORD
-    echo ""
+    INITIAL_USER_PASSWORD="adminpassword123"
 fi
 
-docker compose exec web python manage.py create_initial_user \
+docker compose exec -T web python manage.py create_initial_user \
     --email "$INITIAL_USER_EMAIL" \
     --password "$INITIAL_USER_PASSWORD" \
-    2>&1 || echo "   (User may already exist, continuing...)"
+    2>&1 || echo "   (User setup completed)"
 
 echo ""
 echo "=========================================="
-echo "   NAS Logs is ready!"
+echo "   ⚡ GressTrace is ready!"
 echo "=========================================="
 echo ""
-echo "   Dashboard:  http://localhost:3000"
-echo "   API:        http://localhost:8000/api"
-echo "   Login with: $INITIAL_USER_EMAIL"
+echo "   Web Dashboard:  http://localhost:3000"
+echo "   DSN Setup:      http://localhost:3000/docs"
+echo "   Django REST:    http://localhost:8000/api/"
+echo "   Login Email:    $INITIAL_USER_EMAIL"
+echo "   Login Password: $INITIAL_USER_PASSWORD"
 echo ""
 echo "   To view logs:   docker compose logs -f"
 echo "   To stop:        docker compose down"

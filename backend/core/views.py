@@ -106,6 +106,9 @@ class ProjectSettingsView(APIView):
             return Response({"error": "Project not found"}, status=404)
 
         try:
+            if request.data.get('regenerate_dsn'):
+                project.api_key = secrets.token_hex(32)
+                project.save()
             if 'name' in request.data:
                 project.name = request.data['name']
             if 'opencost_url' in request.data:
