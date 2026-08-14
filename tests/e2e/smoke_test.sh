@@ -182,7 +182,7 @@ assert_status "GET /auth/me/ (authenticated)" 200 "$ME_STATUS"
 assert_json_field "Me returns user email" "$ME_BODY" "email"
 
 # Unauthenticated access should be blocked
-NOAUTH_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$API_URL/dashboard/summary/" 2>/dev/null || echo "000")
+NOAUTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/dashboard/summary/" 2>/dev/null || echo "000")
 if [ "$NOAUTH_STATUS" -eq 401 ] || [ "$NOAUTH_STATUS" -eq 403 ]; then
     pass "Unauthenticated request blocked (HTTP $NOAUTH_STATUS)"
 else
@@ -206,8 +206,14 @@ API_KEY=$(echo "$PROJECTS_RESP" | python3 -c "
 import sys,json
 d = json.load(sys.stdin)
 projects = d.get('projects', d.get('results', []))
-print(projects[0]['api_key'] if projects else '')
+print(projects[0].get('api_key','') if projects else '')
 " 2>/dev/null || echo "")
+
+if [ -z "$API_KEY" ]; then
+    SETTINGS_RESP=$(curl -sf "$API_URL/projects/settings/?project_id=$PROJECT_ID" \
+        -H "Authorization: Bearer $ACCESS_TOKEN" 2>/dev/null || echo "{}")
+    API_KEY=$(echo "$SETTINGS_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('api_key',''))" 2>/dev/null || echo "")
+fi
 
 if [ -n "$API_KEY" ]; then
     pass "Project $PROJECT_ID found (API key: ${API_KEY:0:16}...)"
@@ -222,7 +228,7 @@ fi
 header "PHASE 4: SDK Telemetry Ingest"
 
 # Flush 1: Baseline traffic — normal egress from 4 microservices
-INGEST_1=$(curl -sf -w "\n%{http_code}" -X POST \
+INGEST_1=$(curl -s -w "\n%{http_code}" -X POST \
     "$API_URL/collector/v1/ingest/$PROJECT_ID/" \
     -H "Content-Type: application/json" \
     -H "X-Project-Key: $API_KEY" \
@@ -274,7 +280,7 @@ assert_json_field "Flush 1 returns snapshot_id" "$INGEST_1_BODY" "snapshot_id"
 sleep 1
 
 # Flush 2: ANOMALOUS traffic — kafka-connect egress spikes 50x
-INGEST_2=$(curl -sf -w "\n%{http_code}" -X POST \
+INGEST_2=$(curl -s -w "\n%{http_code}" -X POST \
     "$API_URL/collector/v1/ingest/$PROJECT_ID/" \
     -H "Content-Type: application/json" \
     -H "X-Project-Key: $API_KEY" \
@@ -330,7 +336,7 @@ log "Anomalies detected in flush 2: $ANOMALIES_2"
 sleep 1
 
 # Flush 3: Another spike — verifies the system doesn't crash on repeated ingest
-INGEST_3=$(curl -sf -w "\n%{http_code}" -X POST \
+INGEST_3=$(curl -s -w "\n%{http_code}" -X POST \
     "$API_URL/collector/v1/ingest/$PROJECT_ID/" \
     -H "Content-Type: application/json" \
     -H "X-Project-Key: $API_KEY" \
@@ -360,7 +366,7 @@ INGEST_3_STATUS=$(echo "$INGEST_3" | tail -1)
 assert_status "POST ingest (flush 3 — sustained spike)" 201 "$INGEST_3_STATUS"
 
 # Verify ingest rejected without API key
-NOKEY_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" -X POST \
+NOKEY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
     "$API_URL/collector/v1/ingest/$PROJECT_ID/" \
     -H "Content-Type: application/json" \
     -d '{"workloads": []}' 2>/dev/null || echo "000")
@@ -435,15 +441,15 @@ assert_status "GET /projects/settings/" 200 "$SETTINGS_STATUS"
 header "PHASE 6: Frontend Smoke Check"
 
 # Frontend serves HTML
-FRONTEND_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$FRONTEND_URL/" 2>/dev/null || echo "000")
+FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL/" 2>/dev/null || echo "000")
 assert_status "GET / (frontend HTML)" 200 "$FRONTEND_STATUS"
 
 # Frontend serves JS assets
-JS_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$FRONTEND_URL/js/app.js" 2>/dev/null || echo "000")
+JS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL/js/app.js" 2>/dev/null || echo "000")
 assert_status "GET /js/app.js (static asset)" 200 "$JS_STATUS"
 
 # Frontend proxies API
-PROXY_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$FRONTEND_URL/api/health/" 2>/dev/null || echo "000")
+PROXY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL/api/health/" 2>/dev/null || echo "000")
 assert_status "GET /api/health/ via nginx proxy" 200 "$PROXY_STATUS"
 
 # ============================================================================

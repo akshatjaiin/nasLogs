@@ -115,6 +115,7 @@ class ProjectManagementView(APIView):
             "name": p.name,
             "opencost_url": p.opencost_url,
             "k8s_context": p.k8s_context,
+            "api_key": p.api_key,
             "created_at": p.created_at.strftime('%Y-%m-%d %H:%M')
         } for p in projects]
         return Response({"projects": data})
