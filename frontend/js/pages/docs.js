@@ -31,12 +31,13 @@ export async function renderDocs(container) {
     ]
   }'`;
 
-        const helmSnippet = `helm repo add gresstrace https://charts.gresstrace.com/charts && helm install gresstrace-agent gresstrace/agent --set dsn="${projectDsn}"`;
-        const pythonSnippet = `pip install gresstrace
+        const kubectlSnippet = `curl -sL https://raw.githubusercontent.com/akshatjaiin/nasLogs/main/deploy/k8s/install.sh | DSN="${projectDsn}" sh`;
+        const helmSnippet = `helm install gresstrace-agent https://github.com/akshatjaiin/nasLogs/raw/main/deploy/k8s/helm/gresstrace-agent.tgz --set dsn="${projectDsn}"`;
+        const pythonSnippet = `pip install nas-logs
 
-from gresstrace import GressTraceClient
+from nas_logs import NASLogsClient
 
-client = GressTraceClient(dsn="${projectDsn}")
+client = NASLogsClient(dsn="${projectDsn}")
 client.track_egress(namespace="production", controller="kafka-connect", egress_bytes=182749102948)`;
 
         container.innerHTML = `
@@ -77,6 +78,7 @@ client.track_egress(namespace="production", controller="kafka-connect", egress_b
 
                     <div style="display:flex;gap:var(--space-md);border-bottom:1px solid var(--border-primary);padding-bottom:var(--space-md);margin-bottom:var(--space-lg)">
                         <button class="filter-pill active" id="tab-curl">cURL 1-Click Test</button>
+                        <button class="filter-pill" id="tab-kubectl">Kubectl Installer</button>
                         <button class="filter-pill" id="tab-helm">Helm Chart (Kubernetes)</button>
                         <button class="filter-pill" id="tab-python">Python SDK</button>
                     </div>
@@ -92,10 +94,21 @@ client.track_egress(namespace="production", controller="kafka-connect", egress_b
                         </div>
                     </div>
 
+                    <!-- Kubectl Tab -->
+                    <div id="content-kubectl" style="display:none">
+                        <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:var(--space-md)">
+                            Run this single command on your Kubernetes cluster to deploy the GressTrace collector DaemonSet:
+                        </p>
+                        <div class="code-block" style="background:var(--bg-primary);padding:var(--space-lg);border-radius:var(--radius-md);font-family:var(--font-mono);font-size:var(--text-xs);position:relative;border:1px solid var(--border-primary);white-space:pre-wrap;word-break:break-all">
+                            <button class="btn btn-ghost btn-copy-code" data-code="${encodeURIComponent(kubectlSnippet)}" style="position:absolute;top:10px;right:10px;height:28px">Copy Command</button>
+                            <code>${kubectlSnippet}</code>
+                        </div>
+                    </div>
+
                     <!-- Helm Tab -->
                     <div id="content-helm" style="display:none">
                         <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:var(--space-md)">
-                            Deploy the lightweight eBPF collector DaemonSet on your Kubernetes cluster:
+                            Deploy the lightweight eBPF collector DaemonSet on your Kubernetes cluster using Helm:
                         </p>
                         <div class="code-block" style="background:var(--bg-primary);padding:var(--space-lg);border-radius:var(--radius-md);font-family:var(--font-mono);font-size:var(--text-xs);position:relative;border:1px solid var(--border-primary);white-space:pre-wrap;word-break:break-all">
                             <button class="btn btn-ghost btn-copy-code" data-code="${encodeURIComponent(helmSnippet)}" style="position:absolute;top:10px;right:10px;height:28px">Copy Command</button>
@@ -144,23 +157,29 @@ client.track_egress(namespace="production", controller="kafka-connect", egress_b
 
         // Tab switching logic
         const curlTab = container.querySelector('#tab-curl');
+        const kubectlTab = container.querySelector('#tab-kubectl');
         const helmTab = container.querySelector('#tab-helm');
         const pythonTab = container.querySelector('#tab-python');
         const curlContent = container.querySelector('#content-curl');
+        const kubectlContent = container.querySelector('#content-kubectl');
         const helmContent = container.querySelector('#content-helm');
         const pythonContent = container.querySelector('#content-python');
 
         curlTab?.addEventListener('click', () => {
-            curlTab.classList.add('active'); helmTab.classList.remove('active'); pythonTab.classList.remove('active');
-            curlContent.style.display = 'block'; helmContent.style.display = 'none'; pythonContent.style.display = 'none';
+            curlTab.classList.add('active'); kubectlTab?.classList.remove('active'); helmTab?.classList.remove('active'); pythonTab?.classList.remove('active');
+            curlContent.style.display = 'block'; if (kubectlContent) kubectlContent.style.display = 'none'; helmContent.style.display = 'none'; pythonContent.style.display = 'none';
+        });
+        kubectlTab?.addEventListener('click', () => {
+            kubectlTab.classList.add('active'); curlTab?.classList.remove('active'); helmTab?.classList.remove('active'); pythonTab?.classList.remove('active');
+            if (kubectlContent) kubectlContent.style.display = 'block'; curlContent.style.display = 'none'; helmContent.style.display = 'none'; pythonContent.style.display = 'none';
         });
         helmTab?.addEventListener('click', () => {
-            helmTab.classList.add('active'); curlTab.classList.remove('active'); pythonTab.classList.remove('active');
-            helmContent.style.display = 'block'; curlContent.style.display = 'none'; pythonContent.style.display = 'none';
+            helmTab.classList.add('active'); curlTab?.classList.remove('active'); kubectlTab?.classList.remove('active'); pythonTab?.classList.remove('active');
+            helmContent.style.display = 'block'; curlContent.style.display = 'none'; if (kubectlContent) kubectlContent.style.display = 'none'; pythonContent.style.display = 'none';
         });
         pythonTab?.addEventListener('click', () => {
-            pythonTab.classList.add('active'); curlTab.classList.remove('active'); helmTab.classList.remove('active');
-            pythonContent.style.display = 'block'; curlContent.style.display = 'none'; helmContent.style.display = 'none';
+            pythonTab.classList.add('active'); curlTab?.classList.remove('active'); kubectlTab?.classList.remove('active'); helmTab?.classList.remove('active');
+            pythonContent.style.display = 'block'; curlContent.style.display = 'none'; if (kubectlContent) kubectlContent.style.display = 'none'; helmContent.style.display = 'none';
         });
 
         // Copy buttons
