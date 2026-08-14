@@ -11,12 +11,13 @@ echo "=========================================="
 # Auto-copy .env.example if .env doesn't exist (prevents first-run crash)
 if [ ! -f /app/.env ] && [ -f /app/.env.example ]; then
     echo "[entrypoint] No .env found — copying from .env.example..."
-    cp /app/.env.example /app/.env
+    cp /app/.env.example /app/.env 2>/dev/null || true
     echo "[entrypoint] WARNING: Using default .env — update SECRET_KEY for production!"
 fi
 
 # Ensure filestore storage directory exists
 mkdir -p /data/files 2>/dev/null || true
+mkdir -p /app/staticfiles 2>/dev/null || true
 
 # Run database migrations
 echo "[entrypoint] Running database migrations..."

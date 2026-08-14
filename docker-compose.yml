@@ -36,7 +36,6 @@ services:
       context: ./backend
     restart: always
     volumes:
-      - ./backend:/app
       - staticfiles:/app/staticfiles
     env_file:
       - ./backend/.env
@@ -61,8 +60,6 @@ services:
       context: ./backend
     restart: always
     command: celery -A config worker -l info --concurrency=2 --max-tasks-per-child=1000 --max-memory-per-child=256000
-    volumes:
-      - ./backend:/app
     env_file:
       - ./backend/.env
     environment:
@@ -88,8 +85,6 @@ services:
       context: ./backend
     restart: always
     command: celery -A config beat -l info --pidfile=/tmp/celerybeat.pid --schedule=/tmp/celerybeat-schedule
-    volumes:
-      - ./backend:/app
     env_file:
       - ./backend/.env
     environment:

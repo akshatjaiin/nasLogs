@@ -42,3 +42,5 @@ Thumbs.db
 scratch/
 .pytest_cache/
 staticfiles/
+reference/
+
