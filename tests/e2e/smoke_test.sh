@@ -228,7 +228,7 @@ fi
 header "PHASE 4: SDK Telemetry Ingest"
 
 # Flush 1: Baseline traffic — normal egress from 4 microservices
-INGEST_1=$(curl -sf -w "\n%{http_code}" -X POST \
+INGEST_1=$(curl -s -w "\n%{http_code}" -X POST \
     "$API_URL/collector/v1/ingest/$PROJECT_ID/" \
     -H "Content-Type: application/json" \
     -H "X-Project-Key: $API_KEY" \
@@ -280,7 +280,7 @@ assert_json_field "Flush 1 returns snapshot_id" "$INGEST_1_BODY" "snapshot_id"
 sleep 1
 
 # Flush 2: ANOMALOUS traffic — kafka-connect egress spikes 50x
-INGEST_2=$(curl -sf -w "\n%{http_code}" -X POST \
+INGEST_2=$(curl -s -w "\n%{http_code}" -X POST \
     "$API_URL/collector/v1/ingest/$PROJECT_ID/" \
     -H "Content-Type: application/json" \
     -H "X-Project-Key: $API_KEY" \
@@ -336,7 +336,7 @@ log "Anomalies detected in flush 2: $ANOMALIES_2"
 sleep 1
 
 # Flush 3: Another spike — verifies the system doesn't crash on repeated ingest
-INGEST_3=$(curl -sf -w "\n%{http_code}" -X POST \
+INGEST_3=$(curl -s -w "\n%{http_code}" -X POST \
     "$API_URL/collector/v1/ingest/$PROJECT_ID/" \
     -H "Content-Type: application/json" \
     -H "X-Project-Key: $API_KEY" \
@@ -441,15 +441,15 @@ assert_status "GET /projects/settings/" 200 "$SETTINGS_STATUS"
 header "PHASE 6: Frontend Smoke Check"
 
 # Frontend serves HTML
-FRONTEND_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$FRONTEND_URL/" 2>/dev/null || echo "000")
+FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL/" 2>/dev/null || echo "000")
 assert_status "GET / (frontend HTML)" 200 "$FRONTEND_STATUS"
 
 # Frontend serves JS assets
-JS_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$FRONTEND_URL/js/app.js" 2>/dev/null || echo "000")
+JS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL/js/app.js" 2>/dev/null || echo "000")
 assert_status "GET /js/app.js (static asset)" 200 "$JS_STATUS"
 
 # Frontend proxies API
-PROXY_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$FRONTEND_URL/api/health/" 2>/dev/null || echo "000")
+PROXY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL/api/health/" 2>/dev/null || echo "000")
 assert_status "GET /api/health/ via nginx proxy" 200 "$PROXY_STATUS"
 
 # ============================================================================

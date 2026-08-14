@@ -100,9 +100,11 @@ class IngestTelemetryView(APIView):
         incidents_created = []
 
         for anomaly in anomalies:
-            inc_id = create_incident(anomaly.id)
-            if inc_id:
-                incidents_created.append(inc_id)
+            res = create_incident(anomaly.id)
+            if res is not None:
+                inc_id = getattr(res, 'result', res)
+                if isinstance(inc_id, (int, str)):
+                    incidents_created.append(int(inc_id))
 
         return Response({
             "status": "success",
