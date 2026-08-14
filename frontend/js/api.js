@@ -106,6 +106,14 @@ export const api = {
         });
     },
 
+    async regenerateProjectDSN(projectId = '1') {
+        return fetchJSON(`${API_BASE}/projects/settings/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ project_id: projectId, regenerate_dsn: true })
+        });
+    },
+
     // Alert Rules
     async getAlertRules(projectId = '1') {
         return fetchJSON(`${API_BASE}/alerts/rules/?project_id=${projectId}`);
