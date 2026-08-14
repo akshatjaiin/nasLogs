@@ -1,3 +1,5 @@
+import { auth } from './auth.js';
+
 // Clean HTML5 History Router (No '#' in URLs)
 export class Router {
     constructor(routes) {
@@ -23,6 +25,14 @@ export class Router {
         if (window.location.hash && window.location.hash.startsWith('#/')) {
             path = window.location.hash.slice(1);
             window.history.replaceState(null, '', path);
+        }
+
+        if (!auth.isLoggedIn() && path !== '/login') {
+            path = '/login';
+            window.history.replaceState(null, '', '/login');
+        } else if (auth.isLoggedIn() && path === '/login') {
+            path = '/';
+            window.history.replaceState(null, '', '/');
         }
 
         let matched = null;

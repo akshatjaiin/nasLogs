@@ -12,14 +12,21 @@ async function fetchJSON(url, options = {}) {
     let response = await fetch(url, options);
 
     if (response.status === 401) {
+        if (url.includes('/auth/login/') || url.includes('/auth/register/')) {
+            const data = await response.json();
+            throw new Error(data.detail || data.error || 'Invalid credentials');
+        }
+
         const refreshed = await auth.tryRefresh();
         if (refreshed) {
             options.headers['Authorization'] = `Bearer ${auth.getToken()}`;
             response = await fetch(url, options);
         } else {
             auth.clear();
-            window.history.pushState(null, '', '/login');
-            window.location.reload();
+            if (window.location.pathname !== '/login') {
+                window.history.pushState(null, '', '/login');
+                window.dispatchEvent(new CustomEvent('nas:auth:logout'));
+            }
         }
     }
 
