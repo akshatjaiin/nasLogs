@@ -62,6 +62,23 @@ function initTopHeader() {
     });
 }
 
+export async function populateProjectPicker() {
+    try {
+        if (!auth.isLoggedIn()) return;
+        const { api } = await import('./api.js');
+        const data = await api.getProjects();
+        const picker = document.getElementById('project-picker');
+        if (picker && data.projects && data.projects.length > 0) {
+            picker.innerHTML = '<option value="all">All Projects</option>' +
+                data.projects.map(p => 
+                    `<option value="${p.id}" ${p.id == window.currentProjectId ? 'selected' : ''}>${p.name}</option>`
+                ).join('');
+        }
+    } catch (e) {
+        console.warn('Could not load projects:', e);
+    }
+}
+
 // Initialize Sentry-style sidebar with Organization & Project picker
 function initSidebar(router) {
     const sidebar = document.getElementById('sidebar');
@@ -71,8 +88,8 @@ function initSidebar(router) {
                 <i data-lucide="activity" style="width:16px;height:16px;color:#FFF"></i>
             </div>
             <div class="logo-text">
-                NAS Logs
-                <span>Sentry for Network Costs</span>
+                GressTrace
+                <span>Egress Traffic Trace & Costs</span>
             </div>
         </div>
 
@@ -117,7 +134,7 @@ function initSidebar(router) {
         </nav>
 
         <div class="sidebar-footer" style="display:flex;align-items:center;gap:10px;">
-            <span>NAS Logs v0.1.0</span>
+            <span>GressTrace v0.1.0</span>
             <span style="color:var(--success-content)">● Live</span>
             <a href="#" id="logout-btn" style="color:var(--text-secondary);margin-left:auto;text-decoration:none;" title="Logout">
                 <i data-lucide="log-out" style="width:14px;height:14px"></i>
@@ -125,11 +142,12 @@ function initSidebar(router) {
         </div>
     `;
 
+    populateProjectPicker();
+
     document.getElementById('logout-btn')?.addEventListener('click', (e) => {
         e.preventDefault();
         auth.clear();
-        window.history.pushState(null, '', '/login');
-        window.location.reload();
+        window.dispatchEvent(new CustomEvent('nas:auth:logout'));
     });
 
     // Handle project picker change
@@ -155,14 +173,45 @@ export const router = new Router([
     { path: '/docs', render: renderDocs },
 ]);
 
+function updateLayoutUI() {
+    const isLogin = !auth.isLoggedIn() || window.location.pathname === '/login';
+    const topHeader = document.getElementById('top-header');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    if (isLogin) {
+        if (topHeader) topHeader.style.display = 'none';
+        if (sidebar) sidebar.style.display = 'none';
+        if (mainContent) mainContent.style.marginLeft = '0';
+    } else {
+        if (topHeader) topHeader.style.display = 'flex';
+        if (sidebar) sidebar.style.display = 'flex';
+        if (mainContent) mainContent.style.marginLeft = '240px';
+        initTopHeader();
+        initSidebar(router);
+    }
+}
+
+window.addEventListener('nas:auth:login', () => {
+    updateLayoutUI();
+    router.navigate('/');
+});
+
+window.addEventListener('nas:auth:logout', () => {
+    updateLayoutUI();
+    router.navigate('/login');
+});
+
 // Trigger Lucide icons on route change
 window.addEventListener('popstate', () => {
+    updateLayoutUI();
     if (window.lucide) window.lucide.createIcons();
 });
 
 // Global navigation helper
 window.navigateTo = (path) => {
     router.navigate(path);
+    updateLayoutUI();
     if (window.lucide) setTimeout(() => window.lucide.createIcons(), 50);
 };
 
@@ -189,6 +238,7 @@ window.addEventListener('keydown', (e) => {
 // Dispatches a custom 'nas:poll' event instead of re-rendering the entire page.
 // Individual pages opt-in to data refresh by listening for this event.
 setInterval(() => {
+    if (!auth.isLoggedIn()) return;
     pollSecondsRemaining--;
     const badge = document.getElementById('poll-timer-badge');
     if (badge) {
@@ -208,29 +258,12 @@ setInterval(() => {
 }, 1000);
 
 // Boot
-const path = window.location.pathname || '/';
-const isLoginPath = path === '/login';
-
-if (!auth.isLoggedIn() && !isLoginPath) {
-    window.history.replaceState(null, '', '/login');
-    window.location.reload();
-} else if (auth.isLoggedIn() && isLoginPath) {
-    window.history.replaceState(null, '', '/');
-    window.location.reload();
-} else {
-    if (isLoginPath) {
-        document.getElementById('top-header').style.display = 'none';
-        document.getElementById('sidebar').style.display = 'none';
-        document.getElementById('main-content').style.marginLeft = '0';
-    } else {
-        initTopHeader();
-        initSidebar(router);
-    }
-}
+updateLayoutUI();
 
 // Dynamically load projects into sidebar picker
 (async () => {
     try {
+        if (!auth.isLoggedIn()) return;
         const { api } = await import('./api.js');
         const data = await api.getProjects();
         const picker = document.getElementById('project-picker');
@@ -244,5 +277,6 @@ if (!auth.isLoggedIn() && !isLoginPath) {
         console.warn('Could not load projects:', e);
     }
 })();
+
 router.resolve();
 if (window.lucide) window.lucide.createIcons();

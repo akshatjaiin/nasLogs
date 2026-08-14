@@ -81,7 +81,7 @@ export async function renderAlerts(container) {
 
                 <!-- Create Rule Modal Drawer -->
                 <div id="modal-create-rule" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center">
-                    <div class="panel" style="width:480px;background:var(--bg-primary);border:1px solid var(--border-primary)">
+                    <div class="panel" style="width:480px;background:var(--bg-primary);border:1px solid var(--border-primary);padding:var(--space-xl)">
                         <h3 class="section-title" style="margin-bottom:var(--space-lg)">Create New Alert Rule</h3>
                         
                         <div style="display:grid;gap:var(--space-md)">

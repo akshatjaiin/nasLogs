@@ -8,8 +8,8 @@ export function renderLogin(container) {
             <div class="login-page" style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--bg-primary);">
                 <div class="login-card" style="background-color: var(--bg-secondary); border: 1px solid var(--border-muted); border-radius: var(--radius-lg); padding: 2rem; width: 100%; max-width: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div class="text-center mb-4">
-                        <h1 style="color: var(--text-heading); font-family: var(--font-sans); margin-bottom: 0.5rem;">Sentry for NAS</h1>
-                        <p style="color: var(--text-secondary); font-family: var(--font-sans);">NAS Logs Authentication</p>
+                        <h1 style="color: var(--text-heading); font-family: var(--font-sans); margin-bottom: 0.5rem;">GressTrace</h1>
+                        <p style="color: var(--text-secondary); font-family: var(--font-sans);">Egress Traffic & Cost Authentication</p>
                     </div>
                     
                     <div style="display: flex; border-bottom: 1px solid var(--border-muted); margin-bottom: 1.5rem;">
@@ -89,8 +89,7 @@ export function renderLogin(container) {
                 }
 
                 auth.setTokens(data.access, data.refresh);
-                window.history.pushState(null, '', '/');
-                window.location.reload();
+                window.dispatchEvent(new CustomEvent('nas:auth:login'));
             } catch (err) {
                 errorMsg.textContent = err.message;
                 errorMsg.style.display = 'block';

@@ -51,6 +51,14 @@
     border-radius: var(--radius-lg);
     overflow: hidden;
     width: 100%;
+    margin-bottom: var(--space-xl);
+    padding: var(--space-xl);
+}
+
+.panel:has(.panel-header),
+.panel:has(.table-container),
+.panel:has(.panel-body) {
+    padding: 0;
 }
 
 .panel-header {

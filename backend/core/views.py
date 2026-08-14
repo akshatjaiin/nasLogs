@@ -52,30 +52,60 @@ class TestOpenCostConnectionView(APIView):
 class ProjectSettingsView(APIView):
 
     def get(self, request):
-        project_id = request.query_params.get('project_id', '1')
-        try:
-            project = Project.objects.get(id=project_id)
-            threshold = AnomalyThreshold.objects.filter(project=project).first()
-            return Response({
-                "id": project.id,
-                "name": project.name,
-                "opencost_url": project.opencost_url,
-                "k8s_context": project.k8s_context,
-                "api_key": project.api_key,
-                "dsn": f"http://{project.api_key}@localhost:8000/api/collector/v1/ingest/{project.id}",
-                "retention_days": getattr(project, 'retention_days', 30),
-                "baseline_window_hours": getattr(project, 'baseline_window_hours', 168),
-                "min_cost_threshold": float(getattr(project, 'min_cost_threshold', 0.01)),
-                "warning_pct": threshold.warning_value * 100 if threshold else 200,
-                "critical_pct": threshold.critical_value * 100 if threshold else 500,
-            })
-        except Project.DoesNotExist:
-            return Response({"error": "Project not found"}, status=404)
+        project_id = request.query_params.get('project_id')
+        project = None
+        if project_id and project_id != 'all':
+            project = Project.objects.filter(id=project_id).first()
+        if not project:
+            project = Project.objects.first()
+        if not project:
+            org = Organization.objects.first()
+            if not org:
+                org = Organization.objects.create(name='Acme Corp', slug='acme-corp')
+            project = Project.objects.create(
+                organization=org,
+                name='Default Cluster Project',
+                opencost_url='http://opencost.monitoring.svc:9003',
+                api_key=secrets.token_hex(32)
+            )
+
+        threshold = AnomalyThreshold.objects.filter(project=project).first()
+        if not threshold:
+            threshold = AnomalyThreshold.objects.create(
+                project=project,
+                metric='network_cost_total',
+                method=AnomalyThreshold.Method.PCT_CHANGE,
+                warning_value=2.0,
+                critical_value=5.0,
+                baseline_window_hours=168,
+                min_cost_threshold=0.0100,
+            )
+
+        return Response({
+            "id": project.id,
+            "name": project.name,
+            "opencost_url": project.opencost_url,
+            "k8s_context": project.k8s_context,
+            "api_key": project.api_key,
+            "dsn": f"http://{project.api_key}@localhost:8000/api/collector/v1/ingest/{project.id}",
+            "retention_days": getattr(project, 'retention_days', 30),
+            "baseline_window_hours": getattr(project, 'baseline_window_hours', 168),
+            "min_cost_threshold": float(getattr(project, 'min_cost_threshold', 0.01)),
+            "warning_pct": threshold.warning_value * 100 if threshold else 200,
+            "critical_pct": threshold.critical_value * 100 if threshold else 500,
+        })
 
     def patch(self, request):
-        project_id = request.data.get('project_id', '1')
+        project_id = request.data.get('project_id')
+        project = None
+        if project_id and project_id != 'all':
+            project = Project.objects.filter(id=project_id).first()
+        if not project:
+            project = Project.objects.first()
+        if not project:
+            return Response({"error": "Project not found"}, status=404)
+
         try:
-            project = Project.objects.get(id=project_id)
             if 'name' in request.data:
                 project.name = request.data['name']
             if 'opencost_url' in request.data:
@@ -91,14 +121,24 @@ class ProjectSettingsView(APIView):
             project.save()
 
             threshold = AnomalyThreshold.objects.filter(project=project).first()
-            if threshold:
-                if 'warning_pct' in request.data:
-                    threshold.warning_value = float(request.data['warning_pct']) / 100.0
-                if 'critical_pct' in request.data:
-                    threshold.critical_value = float(request.data['critical_pct']) / 100.0
-                if 'baseline_window_hours' in request.data:
-                    threshold.baseline_window_hours = int(request.data['baseline_window_hours'])
-                threshold.save()
+            if not threshold:
+                threshold = AnomalyThreshold.objects.create(
+                    project=project,
+                    metric='network_cost_total',
+                    method=AnomalyThreshold.Method.PCT_CHANGE,
+                    warning_value=2.0,
+                    critical_value=5.0,
+                    baseline_window_hours=168,
+                    min_cost_threshold=0.0100,
+                )
+
+            if 'warning_pct' in request.data:
+                threshold.warning_value = float(request.data['warning_pct']) / 100.0
+            if 'critical_pct' in request.data:
+                threshold.critical_value = float(request.data['critical_pct']) / 100.0
+            if 'baseline_window_hours' in request.data:
+                threshold.baseline_window_hours = int(request.data['baseline_window_hours'])
+            threshold.save()
 
             return Response({"status": "updated", "message": "Project settings updated successfully"})
         except Exception as e:
