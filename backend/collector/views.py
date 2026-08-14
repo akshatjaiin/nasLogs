@@ -8,11 +8,14 @@ from collector.models import CostSnapshot, WorkloadCost
 from detector.engine import AnomalyDetector
 from incidents.tasks import create_incident
 from django.db.models import Sum
+import gzip
+import json
 
 class IngestTelemetryView(APIView):
     """Sentry-Style Telemetry Store Endpoint (POST /api/collector/v1/ingest/<project_id>/)"""
     authentication_classes = []
     permission_classes = []
+    throttle_scope = 'ingest'
 
     def post(self, request, project_id):
         # 1. Fetch or initialize target project
@@ -24,6 +27,18 @@ class IngestTelemetryView(APIView):
                 name='Production Cluster (AWS)',
                 opencost_url='http://opencost:9003'
             )
+            # Auto-create a default anomaly detection threshold
+            from detector.models import AnomalyThreshold
+            if not project.thresholds.exists():
+                AnomalyThreshold.objects.create(
+                    project=project,
+                    metric='network_cost_total',
+                    method=AnomalyThreshold.Method.PCT_CHANGE,
+                    warning_value=2.0,
+                    critical_value=5.0,
+                    baseline_window_hours=168,
+                    min_cost_threshold=0.0100,
+                )
 
         # 2. DSN Authentication (required)
         api_key = request.headers.get('X-Project-Key') or request.query_params.get('sentry_key')
@@ -33,7 +48,15 @@ class IngestTelemetryView(APIView):
             return Response({"error": "Invalid DSN authentication key"}, status=status.HTTP_401_UNAUTHORIZED)
 
         # 3. Ingest Payload (batch of workload egress metrics)
-        data = request.data
+        # Handle gzip-compressed payloads from SDK clients
+        if request.headers.get('Content-Encoding') == 'gzip':
+            try:
+                raw_body = gzip.decompress(request.body)
+                data = json.loads(raw_body.decode('utf-8'))
+            except Exception:
+                return Response({"error": "Failed to decompress gzip payload"}, status=400)
+        else:
+            data = request.data
         records = data.get('workloads', data.get('records', []))
         
         if not isinstance(records, list):
@@ -93,8 +116,6 @@ class IngestTelemetryView(APIView):
 
 class TrafficFlowsView(APIView):
     """Aggregated egress traffic flows from real WorkloadCost data, scoped per project."""
-    authentication_classes = []
-    permission_classes = []
 
     # AWS NAT Gateway pricing: $0.045 per GB processed
     NAT_GATEWAY_COST_PER_GB = 0.045

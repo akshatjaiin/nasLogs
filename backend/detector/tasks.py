@@ -9,6 +9,15 @@ def detect_anomalies(snapshot_id):
         detector = AnomalyDetector(snapshot.project)
         anomalies = detector.run_detection(snapshot)
         
+        # Create incidents for detected anomalies (mirrors IngestTelemetryView behavior)
+        if anomalies:
+            from incidents.tasks import create_incident
+            for anomaly in anomalies:
+                try:
+                    create_incident.delay(anomaly.id)
+                except Exception:
+                    create_incident(anomaly.id)
+        
     except CostSnapshot.DoesNotExist:
         pass
 

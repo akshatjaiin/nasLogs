@@ -1,0 +1,86 @@
+name: E2E Smoke Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  e2e-smoke:
+    name: End-to-End Smoke Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Set up Python (for test assertions)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Create .env from example
+        run: |
+          cp ./backend/.env.example ./backend/.env
+          SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(64))")
+          sed -i "s|change-me-to-a-random-64-char-string|$SECRET_KEY|g" ./backend/.env
+          sed -i "s|DEBUG=True|DEBUG=False|g" ./backend/.env
+
+      - name: Build Docker Images
+        run: docker compose build
+
+      - name: Start Services
+        run: |
+          docker compose up -d
+          echo "Waiting for services to initialize..."
+          sleep 15
+
+      - name: Wait for Backend Health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8000/api/health/ > /dev/null 2>&1; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Waiting for backend... ($i/30)"
+            sleep 3
+          done
+
+      - name: Wait for Frontend
+        run: |
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:3000/ > /dev/null 2>&1; then
+              echo "Frontend is ready!"
+              break
+            fi
+            echo "Waiting for frontend... ($i/15)"
+            sleep 2
+          done
+
+      - name: Run E2E Smoke Test
+        run: |
+          chmod +x ./tests/e2e/smoke_test.sh
+          # Override cleanup — we handle it ourselves in CI
+          export COMPOSE_FILE=docker-compose.yml
+          bash ./tests/e2e/smoke_test.sh
+
+      - name: Print Container Logs on Failure
+        if: failure()
+        run: |
+          echo "=== Web Container Logs ==="
+          docker compose logs web --tail 100
+          echo ""
+          echo "=== Worker Container Logs ==="
+          docker compose logs worker --tail 50
+          echo ""
+          echo "=== Frontend (nginx) Logs ==="
+          docker compose logs frontend --tail 50
+
+      - name: Teardown
+        if: always()
+        run: docker compose down -v --remove-orphans

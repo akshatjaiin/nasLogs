@@ -6,11 +6,18 @@ from alerts.views import AlertRuleViewSet
 from core.views import TestOpenCostConnectionView, ProjectSettingsView, ProjectManagementView
 from collector.views import TrafficFlowsView, IngestTelemetryView
 
+from core.auth import RegisterView, LoginView, RefreshView, MeView, LogoutView
+
 router = DefaultRouter()
 router.register(r'incidents', IncidentViewSet, basename='incident')
 router.register(r'alerts/rules', AlertRuleViewSet, basename='alert-rule')
 
 urlpatterns = [
+    path('auth/register/', RegisterView.as_view(), name='auth-register'),
+    path('auth/login/', LoginView.as_view(), name='auth-login'),
+    path('auth/refresh/', RefreshView.as_view(), name='auth-refresh'),
+    path('auth/me/', MeView.as_view(), name='auth-me'),
+    path('auth/logout/', LogoutView.as_view(), name='auth-logout'),
     path('health/', HealthCheckView.as_view(), name='health-check'),
     path('dashboard/summary/', DashboardSummaryView.as_view(), name='dashboard-summary'),
     path('costs/breakdown/', CostBreakdownView.as_view(), name='cost-breakdown'),

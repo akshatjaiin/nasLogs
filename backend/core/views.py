@@ -8,8 +8,6 @@ from core.models import Project, Organization
 from detector.models import AnomalyThreshold
 
 class TestOpenCostConnectionView(APIView):
-    authentication_classes = []
-    permission_classes = []
 
     def post(self, request):
         """Pings OpenCost API endpoint and measures latency in milliseconds."""
@@ -52,8 +50,6 @@ class TestOpenCostConnectionView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 class ProjectSettingsView(APIView):
-    authentication_classes = []
-    permission_classes = []
 
     def get(self, request):
         project_id = request.query_params.get('project_id', '1')
@@ -111,8 +107,6 @@ class ProjectSettingsView(APIView):
 
 class ProjectManagementView(APIView):
     """List & Create Projects for Multi-Cluster Management."""
-    authentication_classes = []
-    permission_classes = []
 
     def get(self, request):
         projects = Project.objects.all()
@@ -144,6 +138,18 @@ class ProjectManagementView(APIView):
             k8s_context=k8s_context,
             api_key=secrets.token_hex(32)
         )
+        
+        # Auto-create a default anomaly detection threshold for the new project
+        AnomalyThreshold.objects.create(
+            project=project,
+            metric='network_cost_total',
+            method=AnomalyThreshold.Method.PCT_CHANGE,
+            warning_value=2.0,
+            critical_value=5.0,
+            baseline_window_hours=168,
+            min_cost_threshold=0.0100,
+        )
+        
         return Response({
             "status": "created",
             "project": {

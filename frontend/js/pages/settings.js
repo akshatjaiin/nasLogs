@@ -5,7 +5,12 @@ export async function renderSettings(container) {
 
     async function render() {
         try {
-            const settings = await api.getProjectSettings(window.currentProjectId || '1');
+            const projectId = window.currentProjectId || '1';
+            if (projectId === 'all') {
+                container.innerHTML = `<div class="page"><div class="empty-state"><h3>Select a Project</h3><p>Project Settings require a specific project to be selected. Use the project picker in the sidebar.</p></div></div>`;
+                return;
+            }
+            const settings = await api.getProjectSettings(projectId);
             const projectsData = await api.getProjects().catch(() => ({ projects: [] }));
             const projects = projectsData.projects || [];
 

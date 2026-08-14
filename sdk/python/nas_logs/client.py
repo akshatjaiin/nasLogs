@@ -9,6 +9,8 @@ import gzip
 from typing import Dict, Any, List, Optional
 from collections import deque
 
+__version__ = '0.1.0'
+
 logger = logging.getLogger('nas_logs.sdk')
 
 
@@ -89,10 +91,13 @@ class NASLogsClient:
         payload = json.dumps({"workloads": workload_costs}).encode('utf-8')
         headers = {
             "Content-Type": "application/json",
-            "User-Agent": "NASLogs-Python-SDK/0.2.0"
+            "User-Agent": f"NASLogs-Python-SDK/{__version__}"
         }
         if self._api_key:
             headers["X-Project-Key"] = self._api_key
+        if self._compress:
+            payload = gzip.compress(payload)
+            headers["Content-Encoding"] = "gzip"
 
         req = urllib.request.Request(self._endpoint, data=payload, headers=headers)
         try:
@@ -165,7 +170,7 @@ class NASLogsClient:
             try:
                 headers = {
                     "Content-Type": "application/json",
-                    "User-Agent": "NASLogs-Python-SDK/0.2.0",
+                    "User-Agent": f"NASLogs-Python-SDK/{__version__}",
                 }
                 if self._api_key:
                     headers["X-Project-Key"] = self._api_key
@@ -178,6 +183,14 @@ class NASLogsClient:
                 with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                     resp.read()
                 return  # Success
+            except urllib.error.HTTPError as e:
+                # Don't retry client errors (4xx) except 429 Too Many Requests
+                if 400 <= e.code < 500 and e.code != 429:
+                    logger.error(f"NAS Logs client error HTTP {e.code}. Not retrying.")
+                    return
+                wait = (2 ** attempt) * 0.5
+                logger.warning(f"NAS Logs send attempt {attempt + 1}/{self._max_retries} failed: HTTP {e.code}. Retrying in {wait}s.")
+                time.sleep(wait)
             except urllib.error.URLError as e:
                 wait = (2 ** attempt) * 0.5
                 logger.warning(f"NAS Logs send attempt {attempt + 1}/{self._max_retries} failed: {e}. Retrying in {wait}s.")

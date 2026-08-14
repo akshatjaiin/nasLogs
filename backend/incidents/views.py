@@ -12,8 +12,6 @@ from collector.models import CostSnapshot, WorkloadCost
 
 class IncidentViewSet(viewsets.ModelViewSet):
     serializer_class = IncidentSerializer
-    authentication_classes = []
-    permission_classes = []
 
     def get_queryset(self):
         qs = Incident.objects.all()
@@ -41,8 +39,6 @@ class IncidentViewSet(viewsets.ModelViewSet):
 
 
 class DashboardSummaryView(APIView):
-    authentication_classes = []
-    permission_classes = []
 
     def get(self, request):
         project_id = request.query_params.get('project_id')
@@ -100,8 +96,6 @@ class DashboardSummaryView(APIView):
 
 class CostBreakdownView(APIView):
     """Namespace-level cost breakdown with drill-down to controllers."""
-    authentication_classes = []
-    permission_classes = []
 
     def get(self, request):
         project_id = request.query_params.get('project_id')
@@ -187,8 +181,6 @@ class CostBreakdownView(APIView):
 
 class CostHistoryView(APIView):
     """Return detailed cost history & egress telemetry for a specific workload."""
-    authentication_classes = []
-    permission_classes = []
 
     def get(self, request):
         namespace = request.query_params.get('namespace')

@@ -41,3 +41,4 @@ Thumbs.db
 # Docker / Temporary
 scratch/
 .pytest_cache/
+staticfiles/

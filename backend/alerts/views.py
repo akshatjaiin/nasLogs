@@ -10,8 +10,6 @@ from .backends import SlackBackend
 class AlertRuleViewSet(viewsets.ModelViewSet):
     queryset = AlertRule.objects.all()
     serializer_class = AlertRuleSerializer
-    authentication_classes = []
-    permission_classes = []
 
     def get_queryset(self):
         project_id = self.request.query_params.get('project_id', '1')

@@ -7,7 +7,8 @@ import { renderDocs } from './pages/docs.js';
 import { renderSettings } from './pages/settings.js';
 import { renderAlerts } from './pages/alerts.js';
 import { renderTraffic } from './pages/traffic.js';
-
+import { renderLogin } from './pages/login.js';
+import { auth } from './auth.js';
 // Global active project state
 window.currentProjectId = '1';
 
@@ -115,11 +116,21 @@ function initSidebar(router) {
             </a>
         </nav>
 
-        <div class="sidebar-footer">
+        <div class="sidebar-footer" style="display:flex;align-items:center;gap:10px;">
             <span>NAS Logs v0.1.0</span>
             <span style="color:var(--success-content)">● Live</span>
+            <a href="#" id="logout-btn" style="color:var(--text-secondary);margin-left:auto;text-decoration:none;" title="Logout">
+                <i data-lucide="log-out" style="width:14px;height:14px"></i>
+            </a>
         </div>
     `;
+
+    document.getElementById('logout-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        auth.clear();
+        window.history.pushState(null, '', '/login');
+        window.location.reload();
+    });
 
     // Handle project picker change
     document.getElementById('project-picker').addEventListener('change', (e) => {
@@ -131,6 +142,7 @@ function initSidebar(router) {
 // Router configuration with clean URLs & aliases to prevent 404
 export const router = new Router([
     { path: '/', render: renderOverview },
+    { path: '/login', render: renderLogin },
     { path: '/incidents', render: renderIncidents },
     { path: '/incidents/:id', render: renderIncidentDetail },
     { path: '/breakdown', render: renderBreakdown },
@@ -196,8 +208,25 @@ setInterval(() => {
 }, 1000);
 
 // Boot
-initTopHeader();
-initSidebar(router);
+const path = window.location.pathname || '/';
+const isLoginPath = path === '/login';
+
+if (!auth.isLoggedIn() && !isLoginPath) {
+    window.history.replaceState(null, '', '/login');
+    window.location.reload();
+} else if (auth.isLoggedIn() && isLoginPath) {
+    window.history.replaceState(null, '', '/');
+    window.location.reload();
+} else {
+    if (isLoginPath) {
+        document.getElementById('top-header').style.display = 'none';
+        document.getElementById('sidebar').style.display = 'none';
+        document.getElementById('main-content').style.marginLeft = '0';
+    } else {
+        initTopHeader();
+        initSidebar(router);
+    }
+}
 
 // Dynamically load projects into sidebar picker
 (async () => {

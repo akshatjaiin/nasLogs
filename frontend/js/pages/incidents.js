@@ -8,10 +8,10 @@ export async function renderIncidents(container) {
     async function render() {
         try {
             const data = await api.getIncidents(currentFilter);
-            const incidents = data.results || [];
+            const incidents = Array.isArray(data) ? data : (data.results || []);
             
             const allData = await api.getIncidents({});
-            const allIncidents = allData.results || [];
+            const allIncidents = Array.isArray(allData) ? allData : (allData.results || []);
             const critCount = allIncidents.filter(i => i.severity === 'critical' && i.status !== 'resolved').length;
             const warnCount = allIncidents.filter(i => i.severity === 'warning' && i.status !== 'resolved').length;
             const openCount = allIncidents.filter(i => i.status === 'open').length;
@@ -108,7 +108,18 @@ export async function renderIncidents(container) {
                     clearTimeout(searchTimeout);
                     searchTimeout = setTimeout(() => {
                         currentFilter.search = e.target.value || undefined;
+                        const cursorPos = e.target.selectionStart;
+                        const searchVal = e.target.value;
                         render();
+                        // Restore focus after re-render
+                        setTimeout(() => {
+                            const newInput = container.querySelector('#incident-search');
+                            if (newInput) {
+                                newInput.value = searchVal;
+                                newInput.focus();
+                                newInput.setSelectionRange(cursorPos, cursorPos);
+                            }
+                        }, 10);
                     }, 300);
                 });
             }

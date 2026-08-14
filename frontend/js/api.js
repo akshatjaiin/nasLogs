@@ -1,8 +1,28 @@
-// API client - talks to Django backend
-const API_BASE = 'http://localhost:8000/api';
+import { auth } from './auth.js';
+
+// API client - talks to Django backend (relative URL works with nginx proxy)
+const API_BASE = '/api';
 
 async function fetchJSON(url, options = {}) {
-    const response = await fetch(url, options);
+    if (!options.headers) options.headers = {};
+    if (auth.isLoggedIn()) {
+        options.headers['Authorization'] = `Bearer ${auth.getToken()}`;
+    }
+
+    let response = await fetch(url, options);
+
+    if (response.status === 401) {
+        const refreshed = await auth.tryRefresh();
+        if (refreshed) {
+            options.headers['Authorization'] = `Bearer ${auth.getToken()}`;
+            response = await fetch(url, options);
+        } else {
+            auth.clear();
+            window.history.pushState(null, '', '/login');
+            window.location.reload();
+        }
+    }
+
     if (!response.ok) throw new Error(`API error: ${response.status}`);
     return response.json();
 }
@@ -93,7 +113,9 @@ export const api = {
     },
 
     async deleteAlertRule(id) {
-        const response = await fetch(`${API_BASE}/alerts/rules/${id}/`, { method: 'DELETE' });
+        const headers = {};
+        if (auth.isLoggedIn()) headers['Authorization'] = `Bearer ${auth.getToken()}`;
+        const response = await fetch(`${API_BASE}/alerts/rules/${id}/`, { method: 'DELETE', headers });
         return response.ok;
     },
 

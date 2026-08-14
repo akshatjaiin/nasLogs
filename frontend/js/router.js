@@ -3,6 +3,7 @@ export class Router {
     constructor(routes) {
         this.routes = routes;
         this.currentRoute = null;
+        this._renderGen = 0;  // Generation counter to prevent async race conditions
         
         window.addEventListener('popstate', () => this.resolve());
         
@@ -28,12 +29,12 @@ export class Router {
         let params = {};
 
         for (const route of this.routes) {
-            const pattern = route.path.replace(/:([\w]+)/g, '([\\w-]+)');
+            const pattern = route.path.replace(/:(\w+)/g, '([\\w-]+)');
             const regex = new RegExp(`^${pattern}$`);
             const match = path.match(regex);
             if (match) {
                 matched = route;
-                const paramNames = [...route.path.matchAll(/:([\w]+)/g)].map(m => m[1]);
+                const paramNames = [...route.path.matchAll(/:(\w+)/g)].map(m => m[1]);
                 paramNames.forEach((name, i) => { params[name] = match[i + 1]; });
                 break;
             }
@@ -46,8 +47,20 @@ export class Router {
         this.currentRoute = matched;
         const container = document.getElementById('page-container');
         if (container) {
+            // Increment generation — any in-flight render from a previous route will bail out
+            const gen = ++this._renderGen;
             container.innerHTML = '';
-            matched.render(container, params);
+            
+            // Wrap render to guard against stale async completions
+            const originalRender = matched.render;
+            const guardedContainer = new Proxy(container, {
+                set: (target, prop, value) => {
+                    if (prop === 'innerHTML' && this._renderGen !== gen) return true; // stale render, discard
+                    target[prop] = value;
+                    return true;
+                }
+            });
+            originalRender(container, params);
         }
 
         // Update sidebar active state

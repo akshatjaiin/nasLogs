@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   db:
@@ -21,8 +20,11 @@ services:
   redis:
     image: redis:7-alpine
     restart: always
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
+    volumes:
+      - redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -33,9 +35,11 @@ services:
     build:
       context: ./backend
     restart: always
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./backend:/app
+      - staticfiles:/app/staticfiles
+    env_file:
+      - ./backend/.env
     ports:
       - "8000:8000"
     environment:
@@ -44,6 +48,8 @@ services:
       DATABASE_USER: postgres
       DATABASE_PASSWORD: postgrespassword
       CELERY_BROKER_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      DEBUG: 'False'
     depends_on:
       db:
         condition: service_healthy
@@ -54,15 +60,23 @@ services:
     build:
       context: ./backend
     restart: always
-    command: celery -A config worker -l info
+    command: celery -A config worker -l info --concurrency=2 --max-tasks-per-child=1000 --max-memory-per-child=256000
     volumes:
       - ./backend:/app
+    env_file:
+      - ./backend/.env
     environment:
       DATABASE_HOST: db
       DATABASE_NAME: smokedetector
       DATABASE_USER: postgres
       DATABASE_PASSWORD: postgrespassword
       CELERY_BROKER_URL: redis://redis:6379/0
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A config inspect ping --timeout 10 2>/dev/null | grep -q 'pong' || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
     depends_on:
       db:
         condition: service_healthy
@@ -73,15 +87,23 @@ services:
     build:
       context: ./backend
     restart: always
-    command: celery -A config beat -l info
+    command: celery -A config beat -l info --pidfile=/tmp/celerybeat.pid --schedule=/tmp/celerybeat-schedule
     volumes:
       - ./backend:/app
+    env_file:
+      - ./backend/.env
     environment:
       DATABASE_HOST: db
       DATABASE_NAME: smokedetector
       DATABASE_USER: postgres
       DATABASE_PASSWORD: postgrespassword
       CELERY_BROKER_URL: redis://redis:6379/0
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/celerybeat.pid && kill -0 $(cat /tmp/celerybeat.pid) || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     depends_on:
       db:
         condition: service_healthy
@@ -101,3 +123,5 @@ services:
 
 volumes:
   pgdata:
+  redisdata:
+  staticfiles:
