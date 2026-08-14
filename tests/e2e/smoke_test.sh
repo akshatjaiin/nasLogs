@@ -47,10 +47,12 @@ header(){ echo ""; echo -e "${CYAN}━━━ $1 ━━━${NC}"; }
 
 assert_status() {
     local desc="$1" expected="$2" actual="$3"
-    if [ "$actual" -eq "$expected" ]; then
+    actual=$(echo "$actual" | tr -d '[:space:]')
+    expected=$(echo "$expected" | tr -d '[:space:]')
+    if [ "$actual" = "$expected" ]; then
         pass "$desc (HTTP $actual)"
     else
-        fail "$desc (expected $expected, got $actual)"
+        fail "$desc (expected HTTP $expected, got HTTP '$actual')"
     fi
 }
 
@@ -183,10 +185,11 @@ assert_json_field "Me returns user email" "$ME_BODY" "email"
 
 # Unauthenticated access should be blocked
 NOAUTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/dashboard/summary/" 2>/dev/null || echo "000")
-if [ "$NOAUTH_STATUS" -eq 401 ] || [ "$NOAUTH_STATUS" -eq 403 ]; then
+NOAUTH_STATUS=$(echo "$NOAUTH_STATUS" | tr -d '[:space:]')
+if [ "$NOAUTH_STATUS" = "401" ] || [ "$NOAUTH_STATUS" = "403" ]; then
     pass "Unauthenticated request blocked (HTTP $NOAUTH_STATUS)"
 else
-    fail "Unauthenticated request NOT blocked (HTTP $NOAUTH_STATUS)"
+    fail "Unauthenticated request NOT blocked (expected HTTP 401/403, got HTTP '$NOAUTH_STATUS')"
 fi
 
 # ============================================================================
@@ -370,10 +373,11 @@ NOKEY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
     "$API_URL/collector/v1/ingest/$PROJECT_ID/" \
     -H "Content-Type: application/json" \
     -d '{"workloads": []}' 2>/dev/null || echo "000")
-if [ "$NOKEY_STATUS" -eq 401 ]; then
+NOKEY_STATUS=$(echo "$NOKEY_STATUS" | tr -d '[:space:]')
+if [ "$NOKEY_STATUS" = "401" ]; then
     pass "Ingest without API key rejected (HTTP 401)"
 else
-    fail "Ingest without API key NOT rejected (HTTP $NOKEY_STATUS)"
+    fail "Ingest without API key NOT rejected (expected HTTP 401, got HTTP '$NOKEY_STATUS')"
 fi
 
 # ============================================================================
