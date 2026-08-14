@@ -43,4 +43,7 @@ scratch/
 .pytest_cache/
 staticfiles/
 reference/
+opencode/
+.opencode/
+
 
