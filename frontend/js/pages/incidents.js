@@ -8,11 +8,10 @@ export async function renderIncidents(container) {
     async function render() {
         try {
             const data = await api.getIncidents(currentFilter);
-            const incidents = data.results || [];
+            const incidents = Array.isArray(data) ? data : (data.results || []);
             
-            // Get counts for filter pills
             const allData = await api.getIncidents({});
-            const allIncidents = allData.results || [];
+            const allIncidents = Array.isArray(allData) ? allData : (allData.results || []);
             const critCount = allIncidents.filter(i => i.severity === 'critical' && i.status !== 'resolved').length;
             const warnCount = allIncidents.filter(i => i.severity === 'warning' && i.status !== 'resolved').length;
             const openCount = allIncidents.filter(i => i.status === 'open').length;
@@ -49,7 +48,6 @@ export async function renderIncidents(container) {
                         </div>
                         <div class="toolbar-right">
                             <div class="search-input">
-                                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                                 <input type="text" placeholder="Search incidents..." id="incident-search">
                             </div>
                         </div>
@@ -62,7 +60,6 @@ export async function renderIncidents(container) {
                             const pct = Math.round(anomaly.deviation_pct || 0);
                             const spike = anomaly.spike || 0;
                             const baseline = anomaly.baseline || 0;
-                            const costHistory = ev.cost_history || [];
                             return `
                                 <div class="incident-row" onclick="window.navigateTo('/incidents/${inc.id}')">
                                     <div class="severity-dot ${inc.severity}"></div>
@@ -85,7 +82,7 @@ export async function renderIncidents(container) {
                                     </div>
                                 </div>
                             `;
-                        }).join('') : '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No incidents match your filters</h3></div>'}
+                        }).join('') : '<div class="empty-state"><h3>No incidents match your filters</h3></div>'}
                     </div>
                 </div>
             `;
@@ -111,7 +108,18 @@ export async function renderIncidents(container) {
                     clearTimeout(searchTimeout);
                     searchTimeout = setTimeout(() => {
                         currentFilter.search = e.target.value || undefined;
+                        const cursorPos = e.target.selectionStart;
+                        const searchVal = e.target.value;
                         render();
+                        // Restore focus after re-render
+                        setTimeout(() => {
+                            const newInput = container.querySelector('#incident-search');
+                            if (newInput) {
+                                newInput.value = searchVal;
+                                newInput.focus();
+                                newInput.setSelectionRange(cursorPos, cursorPos);
+                            }
+                        }, 10);
                     }, 300);
                 });
             }
@@ -129,8 +137,8 @@ export async function renderIncidents(container) {
                                 labels: values.map((_, i) => i),
                                 datasets: [{
                                     data: values,
-                                    borderColor: inc.severity === 'critical' ? '#FF002B' : '#FFCE00',
-                                    backgroundColor: inc.severity === 'critical' ? 'rgba(255,0,43,0.08)' : 'rgba(255,206,0,0.08)',
+                                    borderColor: inc.severity === 'critical' ? '#E03E2F' : '#F5A623',
+                                    backgroundColor: inc.severity === 'critical' ? 'rgba(224, 62, 47, 0.08)' : 'rgba(245, 166, 35, 0.08)',
                                     fill: true, tension: 0.3, borderWidth: 1.5, pointRadius: 0
                                 }]
                             },
@@ -143,9 +151,10 @@ export async function renderIncidents(container) {
                         });
                     }
                 });
+                if (window.lucide) window.lucide.createIcons();
             }, 50);
         } catch (err) {
-            container.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">❌</div><h3>Backend Unavailable</h3><p>${err.message}</p></div></div>`;
+            container.innerHTML = `<div class="page"><div class="empty-state"><h3>Backend Unavailable</h3><p>${err.message}</p></div></div>`;
         }
     }
 

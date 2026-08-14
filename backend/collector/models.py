@@ -11,7 +11,6 @@ class CostSnapshot(models.Model):
     class Meta:
         ordering = ['-timestamp']
         indexes = [models.Index(fields=['project', '-timestamp'])]
-        unique_together = [('project', 'window_start', 'window_end')]
 
     def __str__(self):
         return f"Snapshot {self.id} for {self.project.name} at {self.timestamp}"

@@ -545,7 +545,7 @@ correlation = Correlation(
 **Expected:**
 ```python
 incident = Incident(
-    title="⚠️ WARNING: Network cost spike for ecommerce/cart-service (+300%)",
+    title="️ WARNING: Network cost spike for ecommerce/cart-service (+300%)",
     severity="warning",
     status="open",
     fingerprint="proj_1:ecommerce:cart-service:network_cost_total",
@@ -634,7 +634,7 @@ incident.anomaly.is_resolved == True  # back-propagates
 ```json
 {
     "id": 1,
-    "title": "⚠️ WARNING: Network cost spike for ecommerce/cart-service (+300%)",
+    "title": "️ WARNING: Network cost spike for ecommerce/cart-service (+300%)",
     "severity": "warning",
     "status": "open",
     "summary": "Network cost for ecommerce/cart-service spiked 300%...",
@@ -665,7 +665,7 @@ alert_rule = AlertRule(
 )
 
 incident = Incident(
-    title="🚨 CRITICAL: Network cost spike for media/image-worker (+600%)",
+    title=" CRITICAL: Network cost spike for media/image-worker (+600%)",
     severity="critical",
     evidence={...}
 )
@@ -677,13 +677,13 @@ incident = Incident(
     "blocks": [
         {
             "type": "header",
-            "text": {"type": "plain_text", "text": "🚨 Network Cost Spike Detected"}
+            "text": {"type": "plain_text", "text": " Network Cost Spike Detected"}
         },
         {
             "type": "section",
             "fields": [
                 {"type": "mrkdwn", "text": "*Workload:*\nmedia/image-worker"},
-                {"type": "mrkdwn", "text": "*Severity:*\n🚨 CRITICAL"}
+                {"type": "mrkdwn", "text": "*Severity:*\n CRITICAL"}
             ]
         },
         {

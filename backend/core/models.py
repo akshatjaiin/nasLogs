@@ -1,5 +1,10 @@
 import secrets
 from django.db import models
+from django.contrib.auth.models import User
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='members')
 
 class Organization(models.Model):
     name = models.CharField(max_length=255)
@@ -19,6 +24,12 @@ class Project(models.Model):
     k8s_context = models.CharField(max_length=255, blank=True, default='')
     api_key = models.CharField(max_length=64, unique=True)
     is_active = models.BooleanField(default=True)
+    
+    # Advanced Sentry Project Settings & Customizations
+    retention_days = models.IntegerField(default=30)
+    baseline_window_hours = models.IntegerField(default=168)  # Default 7 days
+    min_cost_threshold = models.DecimalField(max_digits=10, decimal_places=4, default=0.0100)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

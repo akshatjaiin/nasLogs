@@ -6,7 +6,7 @@ We welcome bug reports, feature requests, documentation improvements, and code c
 
 ---
 
-## 🛠️ Development Setup
+## ️ Development Setup
 
 1. **Fork and Clone the Repository**:
    ```bash
@@ -35,7 +35,7 @@ We welcome bug reports, feature requests, documentation improvements, and code c
 
 ---
 
-## 📐 Architecture Overview
+##  Architecture Overview
 
 - `backend/collector/`: Telemetry snapshot & workload cost parsing.
 - `backend/detector/`: Percentage Change & Z-Score anomaly algorithms.
@@ -45,7 +45,7 @@ We welcome bug reports, feature requests, documentation improvements, and code c
 
 ---
 
-## 📝 Pull Request Process
+##  Pull Request Process
 
 1. Create a topic branch (`git checkout -b feature/my-feature`).
 2. Write unit tests for new features (`pytest`).

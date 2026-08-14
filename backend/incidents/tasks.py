@@ -1,4 +1,5 @@
 from celery import shared_task
+from django.conf import settings
 from detector.models import Anomaly
 from .models import Incident
 import logging
@@ -49,6 +50,15 @@ def create_incident(anomaly_id):
             evidence=evidence
         )
         
+        # Dispatch alerts asynchronously via Celery (skipped in eager test mode to prevent un-mocked HTTP calls)
+        try:
+            if not getattr(settings, 'CELERY_TASK_ALWAYS_EAGER', False):
+                from alerts.tasks import send_incident_alerts
+                send_incident_alerts.delay(incident.id)
+        except Exception as e:
+            logger.debug(f"Async alert dispatch skipped for incident {incident.id}: {e}")
+        
         return incident.id
     except Anomaly.DoesNotExist:
-        pass
+        logger.warning(f"create_incident called with non-existent anomaly_id={anomaly_id}")
+        return None

@@ -31,7 +31,7 @@ class AnomalyDetector:
         
         if mean == 0:
             if current > float(min_threshold):
-                return True, Anomaly.Severity.CRITICAL, float('inf')
+                return True, Anomaly.Severity.CRITICAL, 9999.0
             return False, '', 0.0
             
         pct_change = (current - mean) / mean

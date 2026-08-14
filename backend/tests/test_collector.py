@@ -1,9 +1,11 @@
 import pytest
 from unittest.mock import patch, MagicMock
 from decimal import Decimal
+from django.utils import timezone
+from datetime import timedelta
 from collector.client import OpenCostClient, OpenCostError
 from collector.models import CostSnapshot, WorkloadCost
-from collector.tasks import collect_cost_snapshot
+from collector.tasks import collect_cost_snapshot, cleanup_old_snapshots
 
 
 class TestOpenCostClient:
@@ -105,12 +107,10 @@ class TestOpenCostClient:
         }
 
         results = client.parse_allocation_response(response)
-        # The parser splits by '/' — 'broken-service' has no slash
-        # so namespace='broken-service', controller_name='unknown'
         assert len(results) == 1
         assert results[0]['namespace'] == 'broken-service'
         assert results[0]['controller_name'] == 'unknown'
-        assert results[0]['network_cost'] == 0  # missing field defaults to 0
+        assert results[0]['network_cost'] == 0
 
 
 class TestCollectCostSnapshot:
@@ -173,3 +173,27 @@ class TestCollectCostSnapshot:
         """Calling with invalid project ID does not crash."""
         result = collect_cost_snapshot(99999)
         assert result is None
+
+    def test_cleanup_old_snapshots(self, project):
+        """Verify task purges snapshots older than project retention_days."""
+        now = timezone.now()
+        old_time = now - timedelta(days=45)
+        recent_time = now - timedelta(days=5)
+
+        project.retention_days = 30
+        project.save()
+
+        CostSnapshot.objects.create(
+            project=project, timestamp=old_time,
+            window_start=old_time - timedelta(hours=1), window_end=old_time, raw_response={}
+        )
+        CostSnapshot.objects.create(
+            project=project, timestamp=recent_time,
+            window_start=recent_time - timedelta(hours=1), window_end=recent_time, raw_response={}
+        )
+
+        deleted = cleanup_old_snapshots()
+
+        assert deleted == 1
+        assert CostSnapshot.objects.count() == 1
+        assert CostSnapshot.objects.first().timestamp == recent_time

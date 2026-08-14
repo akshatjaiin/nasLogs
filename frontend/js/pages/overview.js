@@ -21,8 +21,8 @@ export async function renderOverview(container) {
 
                 <div class="grid-4">
                     ${ScoreCard({ label: 'Open Incidents', value: summary.open_incidents_count, trendText: 'Active cost anomalies', trendType: 'up' })}
-                    ${ScoreCard({ label: 'Critical', value: summary.critical_count, trendText: summary.critical_count > 0 ? '⚠ Immediate action required' : '✓ All clear', trendType: 'up', valueColor: 'var(--critical-content)' })}
-                    ${ScoreCard({ label: 'Hourly Cost', value: `$${totalCost.toFixed(0)}`, trendText: 'Current burn rate', trendType: 'up' })}
+                    ${ScoreCard({ label: 'Critical Incidents', value: summary.critical_count, trendText: summary.critical_count > 0 ? 'Requires immediate triage' : 'All clear', trendType: 'up', valueColor: 'var(--critical-content)' })}
+                    ${ScoreCard({ label: 'Hourly Cost', value: `$${totalCost.toFixed(2)}`, trendText: 'Current burn rate', trendType: 'up' })}
                     ${ScoreCard({ label: 'Est. 24h Impact', value: `$${(totalCost * 24).toLocaleString('en-US', {maximumFractionDigits: 0})}`, trendText: 'Projected daily total', trendType: totalCost > 100 ? 'up' : 'flat' })}
                 </div>
 
@@ -37,7 +37,7 @@ export async function renderOverview(container) {
                 </div>
 
                 <div class="section">
-                    <h3 class="section-title">🔥 Recent Open Incidents</h3>
+                    <h3 class="section-title">Recent Open Incidents</h3>
                     ${recentIncidents.length > 0 ? `
                         <div class="incident-list">
                             ${recentIncidents.map(inc => {
@@ -66,20 +66,22 @@ export async function renderOverview(container) {
                                 `;
                             }).join('')}
                         </div>
-                    ` : '<div class="empty-state"><div class="empty-icon">✅</div><h3>No open incidents</h3><p>All clear — network traffic matches baselines</p></div>'}
+                    ` : '<div class="empty-state"><h3>No open incidents</h3><p>All clear — network traffic matches baselines</p></div>'}
                 </div>
             </div>
         `;
 
-        // Render main cost trend area chart using modular ChartBuilder
         setTimeout(() => {
             const chartCanvas = document.getElementById('cost-trend-chart');
             if (chartCanvas && costTrend.length > 0) {
                 const labels = costTrend.map((_, i) => `${24 - i}h ago`).reverse();
-                ChartBuilder.createAreaChart(chartCanvas, labels, costTrend);
+                ChartBuilder.createAreaChart(chartCanvas, labels, costTrend, {
+                    strokeColor: '#6C5FC7',
+                    gradientStart: 'rgba(108, 95, 199, 0.25)',
+                    gradientEnd: 'rgba(108, 95, 199, 0.0)'
+                });
             }
 
-            // Render sparklines using modular ChartBuilder
             recentIncidents.forEach(inc => {
                 const sparkCanvas = document.getElementById(`spark-dash-${inc.id}`);
                 const history = (inc.evidence || {}).cost_history || [];
@@ -88,8 +90,10 @@ export async function renderOverview(container) {
                     ChartBuilder.createSparkline(sparkCanvas, values, inc.severity === 'critical');
                 }
             });
+
+            if (window.lucide) window.lucide.createIcons();
         }, 50);
     } catch (err) {
-        container.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">❌</div><h3>Backend Unavailable</h3><p>Make sure Django is running: <code>python manage.py runserver</code></p><p style="color:var(--text-disabled);margin-top:8px">${err.message}</p></div></div>`;
+        container.innerHTML = `<div class="page"><div class="empty-state"><h3>Backend Unavailable</h3><p>Make sure Django is running: <code>python manage.py runserver</code></p><p style="color:var(--text-disabled);margin-top:8px">${err.message}</p></div></div>`;
     }
 }
