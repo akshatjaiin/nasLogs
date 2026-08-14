@@ -11,53 +11,61 @@ from django.db.models import Sum
 import gzip
 import json
 
+import logging
+logger = logging.getLogger(__name__)
+
 class IngestTelemetryView(APIView):
     """Sentry-Style Telemetry Store Endpoint (POST /api/collector/v1/ingest/<project_id>/)"""
     authentication_classes = []
     permission_classes = []
-    throttle_scope = 'ingest'
+    throttle_classes = []
 
     def post(self, request, project_id):
-        # 1. Fetch or initialize target project
-        project = Project.objects.filter(id=project_id).first() or Project.objects.first()
-        if not project:
-            org = Organization.objects.first() or Organization.objects.create(name='Acme Corp', slug='acme-corp')
-            project = Project.objects.create(
-                organization=org,
-                name='Production Cluster (AWS)',
-                opencost_url='http://opencost:9003'
-            )
-            # Auto-create a default anomaly detection threshold
-            from detector.models import AnomalyThreshold
-            if not project.thresholds.exists():
-                AnomalyThreshold.objects.create(
-                    project=project,
-                    metric='network_cost_total',
-                    method=AnomalyThreshold.Method.PCT_CHANGE,
-                    warning_value=2.0,
-                    critical_value=5.0,
-                    baseline_window_hours=168,
-                    min_cost_threshold=0.0100,
+        try:
+            # 1. Fetch or initialize target project
+            project = Project.objects.filter(id=project_id).first() or Project.objects.first()
+            if not project:
+                org = Organization.objects.first() or Organization.objects.create(name='Acme Corp', slug='acme-corp')
+                project = Project.objects.create(
+                    organization=org,
+                    name='Production Cluster (AWS)',
+                    opencost_url='http://opencost:9003'
                 )
+                # Auto-create a default anomaly detection threshold
+                from detector.models import AnomalyThreshold
+                if not project.thresholds.exists():
+                    AnomalyThreshold.objects.create(
+                        project=project,
+                        metric='network_cost_total',
+                        method=AnomalyThreshold.Method.PCT_CHANGE,
+                        warning_value=2.0,
+                        critical_value=5.0,
+                        baseline_window_hours=168,
+                        min_cost_threshold=0.0100,
+                    )
 
-        # 2. DSN Authentication (required)
-        api_key = request.headers.get('X-Project-Key') or request.query_params.get('sentry_key')
-        if not api_key:
-            return Response({"error": "Missing authentication. Provide X-Project-Key header or sentry_key query param."}, status=status.HTTP_401_UNAUTHORIZED)
-        if project.api_key != api_key:
-            return Response({"error": "Invalid DSN authentication key"}, status=status.HTTP_401_UNAUTHORIZED)
+            # 2. DSN Authentication (required)
+            api_key = (
+                request.headers.get('X-Project-Key') or 
+                request.META.get('HTTP_X_PROJECT_KEY') or 
+                request.query_params.get('sentry_key')
+            )
+            if not api_key:
+                return Response({"error": "Missing authentication. Provide X-Project-Key header or sentry_key query param."}, status=status.HTTP_401_UNAUTHORIZED)
+            if project.api_key != api_key:
+                return Response({"error": "Invalid DSN authentication key"}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # 3. Ingest Payload (batch of workload egress metrics)
-        # Handle gzip-compressed payloads from SDK clients
-        if request.headers.get('Content-Encoding') == 'gzip':
-            try:
-                raw_body = gzip.decompress(request.body)
-                data = json.loads(raw_body.decode('utf-8'))
-            except Exception:
-                return Response({"error": "Failed to decompress gzip payload"}, status=400)
-        else:
-            data = request.data
-        records = data.get('workloads', data.get('records', []))
+            # 3. Ingest Payload (batch of workload egress metrics)
+            # Handle gzip-compressed payloads from SDK clients
+            if request.headers.get('Content-Encoding') == 'gzip' or request.META.get('HTTP_CONTENT_ENCODING') == 'gzip':
+                try:
+                    raw_body = gzip.decompress(request.body)
+                    data = json.loads(raw_body.decode('utf-8'))
+                except Exception:
+                    return Response({"error": "Failed to decompress gzip payload"}, status=400)
+            else:
+                data = request.data if isinstance(request.data, dict) else {}
+            records = data.get('workloads', data.get('records', []))
         
         if not isinstance(records, list):
             return Response({"error": "Invalid payload format. Expected list of workloads"}, status=400)
@@ -114,6 +122,9 @@ class IngestTelemetryView(APIView):
             "anomalies_detected": len(anomalies),
             "incidents_created": incidents_created
         }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.exception(f"Unhandled error in IngestTelemetryView: {str(e)}")
+            return Response({"error": f"Internal Server Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class TrafficFlowsView(APIView):

@@ -108,4 +108,8 @@ class AnomalyDetector:
                         controller_name=workload.controller_name
                     ))
                     
-        return Anomaly.objects.bulk_create(anomalies)
+        saved_anomalies = []
+        for anomaly in anomalies:
+            anomaly.save()
+            saved_anomalies.append(anomaly)
+        return saved_anomalies
