@@ -37,7 +37,9 @@ export async function renderTraffic(container) {
                 </div>
 
                 <div class="panel">
-                    <h3 class="section-title">Top Egress Workloads</h3>
+                    <div class="panel-header">
+                        <h3 class="panel-title">Top Egress Workloads</h3>
+                    </div>
                     <div class="table-container">
                         <table class="correlations-table">
                             <thead>
