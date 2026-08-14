@@ -2,9 +2,9 @@ name: E2E Smoke Test
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, testing]
   pull_request:
-    branches: [main]
+    branches: [main, testing]
   workflow_dispatch:  # Manual trigger
 
 jobs:
