@@ -8,6 +8,8 @@
 ![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-purple.svg)
 
+![GressTrace Dashboard Preview](docs/images/dashboard_preview.png)
+
 ---
 
 ## 🚀 Why We Built GressTrace
